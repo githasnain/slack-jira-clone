@@ -47,6 +47,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate new password before hashing
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return NextResponse.json(
+        { error: 'New password must be a string with at least 6 characters' },
+        { status: 400 }
+      );
+    }
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 

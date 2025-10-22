@@ -3,50 +3,117 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+console.log('🔧 Initializing NextAuth configuration...');
+
 const authOptions = {
   providers: [
     CredentialsProvider({
+      id: 'credentials',
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        console.log('🔍 AUTHORIZE FUNCTION CALLED');
+        console.log('🔍 Credentials received:', credentials);
+        console.log('🔍 NextAuth authorize called with:', {
+          credentialsType: typeof credentials,
+          credentialsKeys: credentials ? Object.keys(credentials) : 'null',
+          emailType: typeof credentials?.email,
+          passwordType: typeof credentials?.password,
+          emailValue: credentials?.email,
+          passwordValue: credentials?.password ? '[REDACTED]' : 'null'
+        });
+
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Missing credentials:', { email: !!credentials?.email, password: !!credentials?.password });
           return null;
         }
 
         try {
+          // Validate credentials
+          const email = credentials.email as string;
+          const password = credentials.password as string;
+          
+          if (typeof email !== 'string' || typeof password !== 'string') {
+            console.log('❌ Invalid credential types:', { email: typeof email, password: typeof password });
+            return null;
+          }
+
           // Find user in database
           const user = await prisma.user.findUnique({
             where: {
-              email: credentials.email as string
+              email: email
             }
           });
 
           if (!user) {
+            console.log('❌ User not found:', email);
             return null;
           }
 
           // Check if user is active
           if (!user.isActive) {
+            console.log('❌ User inactive:', email);
             return null;
           }
 
           // Check if account is locked
           if (user.lockedUntil && user.lockedUntil > new Date()) {
+            console.log('❌ Account locked:', email);
             return null;
           }
 
           // Verify password
           if (!user.password) {
+            console.log('❌ No password set for user:', email);
             return null;
           }
 
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password as string,
-            user.password
-          );
+          // Validate password format before comparison
+          if (typeof user.password !== 'string' || user.password.length !== 60 || !user.password.startsWith('$2')) {
+            console.log('❌ Invalid password format for user:', email, 'Length:', user.password?.length, 'Starts with $2:', user.password?.startsWith('$2'));
+            return null;
+          }
+
+          // Additional validation for bcrypt comparison
+          if (typeof password !== 'string' || password.length === 0) {
+            console.log('❌ Invalid password for comparison:', typeof password, 'Length:', password?.length);
+            return null;
+          }
+
+          // Ensure both values are strings and not empty
+          const cleanPassword = String(password).trim();
+          const cleanHash = String(user.password).trim();
+          
+          if (cleanPassword.length === 0 || cleanHash.length === 0) {
+            console.log('❌ Empty password or hash after cleaning');
+            return null;
+          }
+
+          let isPasswordValid = false;
+          try {
+            // Ensure both parameters are strings for bcrypt comparison
+            const passwordStr = String(cleanPassword);
+            const hashStr = String(cleanHash);
+            
+            // Additional validation for bcrypt format
+            if (!hashStr.startsWith('$2')) {
+              console.log('❌ Invalid bcrypt hash format');
+              return null;
+            }
+            
+            isPasswordValid = await bcrypt.compare(passwordStr, hashStr);
+          } catch (bcryptError) {
+            console.log('❌ Bcrypt comparison error:', bcryptError instanceof Error ? bcryptError.message : String(bcryptError));
+            console.log('Password type:', typeof cleanPassword, 'Length:', cleanPassword?.length);
+            console.log('Hash type:', typeof cleanHash, 'Length:', cleanHash?.length);
+            console.log('Password preview:', cleanPassword.substring(0, 10) + '...');
+            console.log('Hash preview:', cleanHash.substring(0, 10) + '...');
+            console.log('Hash starts with $2:', cleanHash.startsWith('$2'));
+            return null;
+          }
 
           if (!isPasswordValid) {
             // Increment login attempts
