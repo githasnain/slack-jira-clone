@@ -1,379 +1,338 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...')
+  console.log('🌱 Starting database seeding...');
 
-  // Create demo users
-  const hashedPassword = await bcrypt.hash('password123', 12)
-
-  const users = await Promise.all([
-    prisma.user.upsert({
-      where: { email: 'john@example.com' },
-      update: {},
-      create: {
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: hashedPassword,
-        status: 'ONLINE',
-        role: 'ADMIN',
-        image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-      }
-    }),
-    prisma.user.upsert({
-      where: { email: 'jane@example.com' },
-      update: {},
-      create: {
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        password: hashedPassword,
-        status: 'AWAY',
-        role: 'MEMBER',
-        image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
-      }
-    }),
-    prisma.user.upsert({
-      where: { email: 'bob@example.com' },
-      update: {},
-      create: {
-        name: 'Bob Wilson',
-        email: 'bob@example.com',
-        password: hashedPassword,
-        status: 'ONLINE',
-        role: 'MEMBER',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-      }
-    }),
-    prisma.user.upsert({
-      where: { email: 'alice@example.com' },
-      update: {},
-      create: {
-        name: 'Alice Johnson',
-        email: 'alice@example.com',
-        password: hashedPassword,
-        status: 'OFFLINE',
-        role: 'MEMBER',
-        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
-      }
-    })
-  ])
-
-  console.log('✅ Created users')
-
-  // Create workspace
-  const workspace = await prisma.workspace.upsert({
-    where: { slug: 'demo-workspace' },
+  // Create admin user
+  const adminPassword = await bcrypt.hash('admin123', 12);
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@workspace.com' },
     update: {},
     create: {
-      name: 'Demo Workspace',
-      description: 'A collaborative workspace for our team',
-      slug: 'demo-workspace'
-    }
-  })
+      email: 'admin@workspace.com',
+      name: 'Admin User',
+      password: adminPassword,
+      role: 'ADMIN',
+      isActive: true,
+      emailVerified: new Date(),
+    },
+  });
 
-  console.log('✅ Created workspace')
+  console.log('✅ Admin user created:', admin.email);
 
-  // Create channels
-  const channels = await Promise.all([
-    prisma.channel.upsert({
-      where: { id: 'general' },
+  // Create regular users
+  const users = [];
+  const userRoles = ['MEMBER', 'MEMBER', 'MEMBER', 'MEMBER', 'MEMBER'];
+  
+  for (let i = 1; i <= 5; i++) {
+    const userPassword = await bcrypt.hash('user123', 12);
+    const user = await prisma.user.upsert({
+      where: { email: `user${i}@workspace.com` },
       update: {},
       create: {
-        id: 'general',
-        name: 'general',
-        description: 'General discussion',
-        type: 'PUBLIC',
-        workspaceId: workspace.id
-      }
-    }),
-    prisma.channel.upsert({
-      where: { id: 'random' },
-      update: {},
-      create: {
-        id: 'random',
-        name: 'random',
-        description: 'Random chat and fun',
-        type: 'PUBLIC',
-        workspaceId: workspace.id
-      }
-    }),
-    prisma.channel.upsert({
-      where: { id: 'announcements' },
-      update: {},
-      create: {
-        id: 'announcements',
-        name: 'announcements',
-        description: 'Important announcements',
-        type: 'PUBLIC',
-        workspaceId: workspace.id
-      }
-    })
-  ])
+        email: `user${i}@workspace.com`,
+        name: `User ${i}`,
+        password: userPassword,
+        role: userRoles[i - 1] as any,
+        isActive: true,
+        emailVerified: new Date(),
+      },
+    });
+    users.push(user);
+  }
 
-  console.log('✅ Created channels')
+  console.log('✅ Regular users created:', users.length);
 
-  // Add users to channels
-  for (const channel of channels) {
-    for (const user of users) {
-      await prisma.channelMember.upsert({
-        where: {
-          channelId_userId: {
-            channelId: channel.id,
-            userId: user.id
-          }
+  // Create workspace
+  const workspace = await prisma.workspace.create({
+    data: {
+      name: 'Main Workspace',
+      description: 'Primary workspace for the team',
+      slug: 'main-workspace',
+    },
+  });
+
+  console.log('✅ Workspace created:', workspace.name);
+
+  // Create projects
+  const projects = [];
+  const projectData = [
+    { name: 'Web Application', description: 'Main web application development', status: 'ACTIVE' },
+    { name: 'Mobile App', description: 'Mobile application for iOS and Android', status: 'ON_HOLD' },
+    { name: 'API Development', description: 'Backend API and microservices', status: 'ACTIVE' },
+    { name: 'Data Analytics', description: 'Business intelligence and analytics platform', status: 'ON_HOLD' },
+  ];
+
+  for (const projectInfo of projectData) {
+    const project = await prisma.project.create({
+      data: {
+        name: projectInfo.name,
+        description: projectInfo.description,
+        status: projectInfo.status as any,
+        workspaceId: workspace.id,
+      },
+    });
+    projects.push(project);
+  }
+
+  console.log('✅ Projects created:', projects.length);
+
+  // Create project members
+  for (const project of projects) {
+    // Add admin as project member
+    await prisma.projectMember.create({
+      data: {
+        projectId: project.id,
+        userId: admin.id,
+        role: 'ADMIN',
+      },
+    });
+
+    // Add some users to each project
+    for (let i = 0; i < 3; i++) {
+      await prisma.projectMember.create({
+        data: {
+          projectId: project.id,
+          userId: users[i].id,
+          role: 'MEMBER',
         },
-        update: {},
-        create: {
-          channelId: channel.id,
-          userId: user.id,
-          role: 'MEMBER'
-        }
-      })
+      });
     }
   }
 
-  console.log('✅ Added users to channels')
+  console.log('✅ Project members created');
 
-  // Create demo messages
-  const messages = await Promise.all([
-    prisma.message.create({
-      data: {
-        content: 'Hey team! Welcome to our new workspace. Let\'s make this project amazing! 🚀',
-        type: 'TEXT',
-        channelId: 'general',
-        userId: users[0].id
-      }
-    }),
-    prisma.message.create({
-      data: {
-        content: 'Thanks John! I\'m excited to be part of this team. Looking forward to collaborating with everyone.',
-        type: 'TEXT',
-        channelId: 'general',
-        userId: users[1].id
-      }
-    }),
-    prisma.message.create({
-      data: {
-        content: 'Same here! The new features we\'re planning look really promising.',
-        type: 'TEXT',
-        channelId: 'general',
-        userId: users[2].id
-      }
-    }),
-    prisma.message.create({
-      data: {
-        content: 'I\'ve set up the project board. Everyone should have access to it now.',
-        type: 'TEXT',
-        channelId: 'general',
-        userId: users[0].id
-      }
-    }),
-    prisma.message.create({
-      data: {
-        content: 'Perfect! I\'ll start working on the user authentication module.',
-        type: 'TEXT',
-        channelId: 'general',
-        userId: users[1].id
-      }
-    })
-  ])
+  // Create channels
+  const channels = [];
+  const channelData = [
+    { name: 'general', description: 'General discussion channel', type: 'PUBLIC' },
+    { name: 'random', description: 'Random chat and off-topic discussions', type: 'PUBLIC' },
+    { name: 'announcements', description: 'Important announcements and updates', type: 'PUBLIC' },
+    { name: 'development', description: 'Development discussions and code reviews', type: 'PUBLIC' },
+    { name: 'design', description: 'Design discussions and feedback', type: 'PUBLIC' },
+  ];
 
-  console.log('✅ Created demo messages')
-
-  // Create projects
-  const projects = await Promise.all([
-    prisma.project.create({
+  for (const channelInfo of channelData) {
+    const channel = await prisma.channel.create({
       data: {
-        name: 'Web Application',
-        description: 'Main web application project with modern features',
-        status: 'ACTIVE',
-        progress: 75,
-        dueDate: new Date('2024-03-15'),
+        name: channelInfo.name,
+        description: channelInfo.description,
+        type: channelInfo.type as any,
         workspaceId: workspace.id,
-        members: {
-          create: [
-            { userId: users[0].id, role: 'OWNER' },
-            { userId: users[1].id, role: 'MEMBER' },
-            { userId: users[2].id, role: 'MEMBER' }
-          ]
-        }
-      }
-    }),
-    prisma.project.create({
-      data: {
-        name: 'Mobile App',
-        description: 'Cross-platform mobile application',
-        status: 'ACTIVE',
-        progress: 45,
-        dueDate: new Date('2024-04-30'),
-        workspaceId: workspace.id,
-        members: {
-          create: [
-            { userId: users[0].id, role: 'OWNER' },
-            { userId: users[3].id, role: 'MEMBER' }
-          ]
-        }
-      }
-    }),
-    prisma.project.create({
-      data: {
-        name: 'API Development',
-        description: 'RESTful API for the application',
-        status: 'ACTIVE',
-        progress: 90,
-        dueDate: new Date('2024-02-28'),
-        workspaceId: workspace.id,
-        members: {
-          create: [
-            { userId: users[2].id, role: 'OWNER' },
-            { userId: users[0].id, role: 'MEMBER' }
-          ]
-        }
-      }
-    })
-  ])
+      },
+    });
+    channels.push(channel);
+  }
 
-  console.log('✅ Created projects')
+  console.log('✅ Channels created:', channels.length);
 
-  // Create tasks
-  const tasks = await Promise.all([
-    // Web Application tasks
-    prisma.task.create({
+  // Create channel members
+  for (const channel of channels) {
+    // Add admin to all channels
+    await prisma.channelMember.create({
       data: {
-        title: 'Design landing page',
-        description: 'Create modern, responsive landing page design',
-        status: 'IN_PROGRESS',
-        priority: 'HIGH',
-        assigneeId: users[1].id,
-        projectId: projects[0].id,
-        dueDate: new Date('2024-01-20'),
-        tags: ['design', 'frontend']
-      }
-    }),
-    prisma.task.create({
-      data: {
-        title: 'Implement user authentication',
-        description: 'Add login/signup functionality with JWT',
-        status: 'TODO',
-        priority: 'URGENT',
-        assigneeId: users[0].id,
-        projectId: projects[0].id,
-        dueDate: new Date('2024-01-25'),
-        tags: ['backend', 'auth']
-      }
-    }),
-    prisma.task.create({
-      data: {
-        title: 'Setup database schema',
-        description: 'Create and configure database tables',
-        status: 'DONE',
-        priority: 'HIGH',
-        assigneeId: users[2].id,
-        projectId: projects[0].id,
-        tags: ['database', 'backend']
-      }
-    }),
-    // Mobile App tasks
-    prisma.task.create({
-      data: {
-        title: 'Setup React Native project',
-        description: 'Initialize React Native project structure',
-        status: 'DONE',
-        priority: 'MEDIUM',
-        assigneeId: users[3].id,
-        projectId: projects[1].id,
-        tags: ['mobile', 'setup']
-      }
-    }),
-    prisma.task.create({
-      data: {
-        title: 'Design mobile UI components',
-        description: 'Create reusable UI components for mobile app',
-        status: 'IN_PROGRESS',
-        priority: 'HIGH',
-        assigneeId: users[3].id,
-        projectId: projects[1].id,
-        dueDate: new Date('2024-02-15'),
-        tags: ['design', 'mobile']
-      }
-    }),
-    // API Development tasks
-    prisma.task.create({
-      data: {
-        title: 'Create REST API endpoints',
-        description: 'Implement CRUD operations for all entities',
-        status: 'DONE',
-        priority: 'HIGH',
-        assigneeId: users[2].id,
-        projectId: projects[2].id,
-        tags: ['api', 'backend']
-      }
-    }),
-    prisma.task.create({
-      data: {
-        title: 'Write API documentation',
-        description: 'Document all REST API endpoints',
-        status: 'REVIEW',
-        priority: 'MEDIUM',
-        assigneeId: users[2].id,
-        projectId: projects[2].id,
-        dueDate: new Date('2024-02-10'),
-        tags: ['documentation']
-      }
-    })
-  ])
+        channelId: channel.id,
+        userId: admin.id,
+        role: 'ADMIN',
+      },
+    });
 
-  console.log('✅ Created tasks')
+    // Add users to channels
+    for (let i = 0; i < 3; i++) {
+      await prisma.channelMember.create({
+        data: {
+          channelId: channel.id,
+          userId: users[i].id,
+          role: 'MEMBER',
+        },
+      });
+    }
+  }
 
-  // Add some message reactions
-  await Promise.all([
-    prisma.messageReaction.create({
-      data: {
-        messageId: messages[0].id,
-        userId: users[1].id,
-        emoji: '👍'
-      }
-    }),
-    prisma.messageReaction.create({
-      data: {
-        messageId: messages[0].id,
-        userId: users[2].id,
-        emoji: '🚀'
-      }
-    }),
-    prisma.messageReaction.create({
-      data: {
-        messageId: messages[1].id,
-        userId: users[0].id,
-        emoji: '👀'
-      }
-    })
-  ])
+  console.log('✅ Channel members created');
 
-  console.log('✅ Created message reactions')
+  // Create sample tickets
+  const tickets = [];
+  const ticketData = [
+    {
+      title: 'Implement user authentication',
+      description: 'Add login and registration functionality with role-based access control',
+      priority: 'HIGH',
+      status: 'IN_PROGRESS',
+      projectId: projects[0].id,
+      assigneeId: users[0].id,
+    },
+    {
+      title: 'Design landing page',
+      description: 'Create modern, responsive landing page design',
+      priority: 'MEDIUM',
+      status: 'TODO',
+      projectId: projects[0].id,
+      assigneeId: users[1].id,
+    },
+    {
+      title: 'Setup CI/CD pipeline',
+      description: 'Configure automated testing and deployment pipeline',
+      priority: 'HIGH',
+      status: 'TODO',
+      projectId: projects[2].id,
+      assigneeId: users[2].id,
+    },
+    {
+      title: 'Mobile app wireframes',
+      description: 'Create initial wireframes for mobile application',
+      priority: 'MEDIUM',
+      status: 'IN_PROGRESS',
+      projectId: projects[1].id,
+      assigneeId: users[3].id,
+    },
+    {
+      title: 'Database optimization',
+      description: 'Optimize database queries and add proper indexing',
+      priority: 'LOW',
+      status: 'DONE',
+      projectId: projects[2].id,
+      assigneeId: users[4].id,
+    },
+    {
+      title: 'API documentation',
+      description: 'Create comprehensive API documentation',
+      priority: 'MEDIUM',
+      status: 'REVIEW',
+      projectId: projects[2].id,
+      assigneeId: users[0].id,
+    },
+  ];
 
-  console.log('🎉 Database seeded successfully!')
-  console.log('\n📊 Demo Data Summary:')
-  console.log(`👥 Users: ${users.length}`)
-  console.log(`🏢 Workspace: ${workspace.name}`)
-  console.log(`💬 Channels: ${channels.length}`)
-  console.log(`📝 Messages: ${messages.length}`)
-  console.log(`📋 Projects: ${projects.length}`)
-  console.log(`✅ Tasks: ${tasks.length}`)
-  console.log('\n🔑 Demo Login Credentials:')
-  console.log('Email: john@example.com | Password: password123')
-  console.log('Email: jane@example.com | Password: password123')
-  console.log('Email: bob@example.com | Password: password123')
-  console.log('Email: alice@example.com | Password: password123')
+  for (const ticketInfo of ticketData) {
+    const ticket = await prisma.task.create({
+      data: {
+        title: ticketInfo.title,
+        description: ticketInfo.description,
+        priority: ticketInfo.priority as any,
+        status: ticketInfo.status as any,
+        projectId: ticketInfo.projectId,
+        assigneeId: ticketInfo.assigneeId,
+      },
+    });
+    tickets.push(ticket);
+  }
+
+  console.log('✅ Tickets created:', tickets.length);
+
+  // Create sample messages
+  const messages = [];
+  const messageData = [
+    {
+      content: 'Welcome to the workspace! Let\'s get started with our first project.',
+      channelId: channels[0].id,
+      userId: admin.id,
+    },
+    {
+      content: 'I\'ve created the initial project structure. Please review and provide feedback.',
+      channelId: channels[0].id,
+      userId: admin.id,
+    },
+    {
+      content: 'The authentication system is now implemented. Please test the login functionality.',
+      channelId: channels[2].id,
+      userId: admin.id,
+    },
+    {
+      content: 'Great work on the landing page design! The UI looks fantastic.',
+      channelId: channels[3].id,
+      userId: users[0].id,
+    },
+    {
+      content: 'I\'ve completed the database optimization. Performance has improved significantly.',
+      channelId: channels[0].id,
+      userId: users[4].id,
+    },
+  ];
+
+  for (const messageInfo of messageData) {
+    const message = await prisma.message.create({
+      data: {
+        content: messageInfo.content,
+        channelId: messageInfo.channelId,
+        userId: messageInfo.userId,
+      },
+    });
+    messages.push(message);
+  }
+
+  console.log('✅ Messages created:', messages.length);
+
+  // Create system logs
+  const systemLogs = [];
+  const logData = [
+    { action: 'USER_CREATED', details: 'Admin user created during system initialization' },
+    { action: 'PROJECT_CREATED', details: 'Web Application project created' },
+    { action: 'CHANNEL_CREATED', details: 'General channel created' },
+    { action: 'TICKET_CREATED', details: 'Authentication ticket created' },
+    { action: 'LOGIN_SUCCESS', details: 'Admin user logged in successfully' },
+  ];
+
+  for (const logInfo of logData) {
+    const log = await prisma.systemLog.create({
+      data: {
+        userId: admin.id,
+        action: logInfo.action,
+        details: logInfo.details,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+    systemLogs.push(log);
+  }
+
+  console.log('✅ System logs created:', systemLogs.length);
+
+  // Create admin actions
+  const adminActions = [];
+  const actionData = [
+    { action: 'USER_MANAGEMENT', targetType: 'USER', targetId: users[0].id, details: 'User account activated' },
+    { action: 'PROJECT_ASSIGNMENT', targetType: 'PROJECT', targetId: projects[0].id, details: 'User assigned to project' },
+    { action: 'TICKET_ASSIGNMENT', targetType: 'TASK', targetId: tickets[0].id, details: 'Ticket assigned to user' },
+  ];
+
+  for (const actionInfo of actionData) {
+    const action = await prisma.adminAction.create({
+      data: {
+        adminId: admin.id,
+        action: actionInfo.action,
+        targetType: actionInfo.targetType,
+        targetId: actionInfo.targetId,
+        details: actionInfo.details,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+    adminActions.push(action);
+  }
+
+  console.log('✅ Admin actions created:', adminActions.length);
+
+  console.log('🎉 Database seeding completed successfully!');
+  console.log('\n📋 Summary:');
+  console.log(`- Admin user: ${admin.email} (password: admin123)`);
+  console.log(`- Regular users: ${users.length} (password: user123)`);
+  console.log(`- Projects: ${projects.length}`);
+  console.log(`- Channels: ${channels.length}`);
+  console.log(`- Tickets: ${tickets.length}`);
+  console.log(`- Messages: ${messages.length}`);
+  console.log(`- System logs: ${systemLogs.length}`);
+  console.log(`- Admin actions: ${adminActions.length}`);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seeding failed:', e)
-    process.exit(1)
+    console.error('❌ Error during seeding:', e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

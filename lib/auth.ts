@@ -1,10 +1,7 @@
-import 'dotenv/config';
 import NextAuth from 'next-auth/next';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-
-console.log("NEXTAUTH_SECRET:", process.env.NEXTAUTH_SECRET);
 
 const authOptions = {
   providers: [
@@ -20,35 +17,74 @@ const authOptions = {
         }
 
         try {
-          // For now, use hardcoded credentials for testing
-          if (credentials.email === 'admin@slackclone.com' && credentials.password === 'admin123') {
-            return {
-              id: '1',
-              email: 'admin@slackclone.com',
-              name: 'Admin User',
-              role: 'ADMIN',
-            };
-          }
-          
-          if (credentials.email === 'sarah@slackclone.com' && credentials.password === 'sarah123') {
-            return {
-              id: '2',
-              email: 'sarah@slackclone.com',
-              name: 'Sarah Johnson',
-              role: 'MEMBER',
-            };
-          }
-          
-          if (credentials.email === 'john@slackclone.com' && credentials.password === 'john123') {
-            return {
-              id: '3',
-              email: 'john@slackclone.com',
-              name: 'John Doe',
-              role: 'MEMBER',
-            };
+          // Find user in database
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email as string
+            }
+          });
+
+          if (!user) {
+            return null;
           }
 
-          return null;
+          // Check if user is active
+          if (!user.isActive) {
+            return null;
+          }
+
+          // Check if account is locked
+          if (user.lockedUntil && user.lockedUntil > new Date()) {
+            return null;
+          }
+
+          // Verify password
+          if (!user.password) {
+            return null;
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            // Increment login attempts
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                loginAttempts: user.loginAttempts + 1,
+                lockedUntil: user.loginAttempts >= 4 ? new Date(Date.now() + 15 * 60 * 1000) : null // Lock for 15 minutes after 5 attempts
+              }
+            });
+            return null;
+          }
+
+          // Reset login attempts on successful login
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              loginAttempts: 0,
+              lockedUntil: null,
+              lastLoginAt: new Date()
+            }
+          });
+
+          // Log successful login
+          await prisma.systemLog.create({
+            data: {
+              userId: user.id,
+              action: 'LOGIN_SUCCESS',
+              details: `User ${user.email} logged in successfully`
+            }
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name || '',
+            role: user.role,
+          };
         } catch (error) {
           console.error('Auth error:', error);
           return null;

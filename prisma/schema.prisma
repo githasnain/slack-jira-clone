@@ -56,6 +56,12 @@ model User {
   resetPasswordExpires DateTime?
   otpCode             String?
   otpExpires          DateTime?
+  
+  // Admin fields
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  loginAttempts Int      @default(0)
+  lockedUntil   DateTime?
 
   accounts Account[]
   sessions Session[]
@@ -64,8 +70,11 @@ model User {
   tasks    Task[]
   projects ProjectMember[]
   channels ChannelMember[]
+  teams    TeamMember[]
   sentDirectMessages DirectMessage[] @relation("SentMessages")
   receivedDirectMessages DirectMessage[] @relation("ReceivedMessages")
+  systemLogs SystemLog[] @relation("UserSystemLogs")
+  adminActions AdminAction[] @relation("AdminActions")
 }
 
 model VerificationToken {
@@ -205,12 +214,27 @@ model Team {
   id          String   @id @default(cuid())
   name        String
   description String?
+  type        TeamType @default(FRONTEND)
   projectId   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks   Task[]
+  members TeamMember[]
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      TeamRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
 }
 
 model Task {
@@ -288,4 +312,48 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum TeamType {
+  FRONTEND
+  BACKEND
+  DESIGN
+}
+
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
+// System Logs and Admin Actions
+model SystemLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation("UserSystemLogs", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AdminAction {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String
+  targetType  String?  // USER, PROJECT, TASK, etc.
+  targetId    String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  admin User @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([createdAt])
 }
