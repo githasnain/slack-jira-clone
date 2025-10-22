@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+/* Custom Color Scheme */
+:root {
+  /* Primary Colors */
+  --primary-purple: #8C00FF;      /* Main brand color */
+  --primary-pink: #FF3F7F;        /* Accent color */
+  --primary-dark: #450693;        /* Dark purple for headers */
+  --neutral-dark: #423F3E;        /* Dark gray for text */
+  --neutral-light: #FFFFFF;       /* White background */
+  
+  /* Semantic Colors */
+  --background: #FFFFFF;
+  --foreground: #423F3E;
+  --card: #FFFFFF;
+  --card-foreground: #423F3E;
+  --popover: #FFFFFF;
+  --popover-foreground: #423F3E;
+  --primary: #8C00FF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #423F3E;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #FF3F7F;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #8C00FF;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Dark mode support */
+.dark {
+  --background: #0F0F0F;
+  --foreground: #FFFFFF;
+  --card: #1A1A1A;
+  --card-foreground: #FFFFFF;
+  --popover: #1A1A1A;
+  --popover-foreground: #FFFFFF;
+  --secondary: #2A2A2A;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2A2A2A;
+  --muted-foreground: #9CA3AF;
+  --border: #374151;
+  --input: #374151;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom utility classes */
+.text-primary-purple { color: #8C00FF; }
+.text-primary-pink { color: #FF3F7F; }
+.text-primary-dark { color: #450693; }
+.text-neutral-dark { color: #423F3E; }
+.bg-primary-purple { background-color: #8C00FF; }
+.bg-primary-pink { background-color: #FF3F7F; }
+.bg-primary-dark { background-color: #450693; }
+.bg-neutral-dark { background-color: #423F3E; }
+.border-primary-purple { border-color: #8C00FF; }
+.border-primary-pink { border-color: #FF3F7F; }
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Dark mode styles using custom color scheme */
+.dark {
+  --background: #FF3F7F;
+  --foreground: #FFFFFF;
+  --card: #2a2a2a;
+  --card-foreground: #FFFFFF;
+  --popover: #2a2a2a;
+  --popover-foreground: #FFFFFF;
+  --primary: #8C00FF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #423F3E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #423F3E;
+  --muted-foreground: #FFFFFF;
+  --accent: #FF3F7F;
+  --accent-foreground: #FFFFFF;
+  --destructive: #ef4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #423F3E;
+  --input: #423F3E;
+  --ring: #8C00FF;
+}
+
+.dark body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Dark mode component styles with improved contrast */
+.dark .bg-white {
+  background-color: var(--card) !important;
+}
+
+.dark .text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-gray-600 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-gray-500 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-gray-400 {
+  color: #FFFFFF !important;
+}
+
+/* Sidebar specific improvements */
+.dark .sidebar {
+  background-color: var(--background) !important;
+}
+
+.dark .sidebar .text-gray-600 {
+  color: #FFFFFF !important;
+}
+
+.dark .sidebar .text-gray-500 {
+  color: #FFFFFF !important;
+}
+
+.dark .border-gray-200 {
+  border-color: var(--border) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--secondary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--secondary) !important;
+}
+
+/* Improved hover states for dark mode */
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: var(--secondary) !important;
+}
+
+.dark .hover\:bg-gray-800:hover {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Header icons hover states */
+.dark .header-icon:hover {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Button hover states in dark mode */
+.dark .hover\:bg-primary-purple:hover {
+  background-color: #7A00E6 !important;
+}
+
+.dark .hover\:bg-primary-purple\/90:hover {
+  background-color: #7A00E6 !important;
+}
+
+/* Input and form elements */
+.dark input {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.dark input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(140, 0, 255, 0.2) !important;
+}
+
+.dark select {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.dark textarea {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+/* Card and modal improvements */
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light pink highlighting for updated tickets */
+.ticket-updated {
+  background-color: #fdf2f8 !important; /* Light pink background */
+  border-color: #f9a8d4 !important; /* Light pink border */
+}
+
+.ticket-recently-updated {
+  background-color: #fdf2f8 !important; /* Light pink background */
+  border-color: #f9a8d4 !important; /* Light pink border */
+  transition: all 0.3s ease-in-out;
+}
+
