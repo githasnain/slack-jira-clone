@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 
 console.log('🔧 Initializing NextAuth configuration...');
 
-const authOptions = {
+export const authOptions = {
   providers: [
     CredentialsProvider({
       id: 'credentials',

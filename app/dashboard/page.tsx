@@ -12,23 +12,19 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (status === 'loading') return;
-      
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-      
-      if (session.user?.role === 'ADMIN') {
-        router.push('/admin/dashboard');
-        return;
-      }
-      
-      setIsLoading(false);
-    };
-
-    checkAuth();
+    if (status === 'loading') return;
+    
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    
+    if (session.user?.role === 'ADMIN') {
+      router.push('/admin/dashboard');
+      return;
+    }
+    
+    setIsLoading(false);
   }, [session, status, router]);
 
   if (isLoading || status === 'loading') {

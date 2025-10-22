@@ -93,7 +93,7 @@ export default function TicketsPage() {
     try {
       const [tasksRes, projectsRes] = await Promise.all([
         fetch('/api/tasks'),
-        fetch('/api/admin/projects')
+        fetch('/api/projects')
       ]);
 
       if (tasksRes.ok) {
