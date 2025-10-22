@@ -80,8 +80,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </header>
 
       <div className="flex">
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'block' : 'hidden'} lg:block lg:w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700`}>
+        <div className={`${sidebarOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 lg:static lg:inset-0 lg:z-auto`}>
+          {/* Mobile close button */}
+          <div className="lg:hidden flex justify-end p-4">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
           <nav className="mt-5 px-2">
             <div className="space-y-1">
               <a
@@ -132,6 +152,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 Messages
+              </a>
+
+              <a
+                href="/analytics"
+                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+              >
+                <svg className="mr-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Analytics
               </a>
 
               {isAdmin && (

@@ -1,12 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Performance optimizations
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  },
-  
   // External packages for server components
   serverExternalPackages: ['@prisma/client'],
   
@@ -24,34 +18,8 @@ const nextConfig: NextConfig = {
   // Output optimization
   output: 'standalone',
   
-  // Webpack optimizations
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
-    
-    // Optimize bundle splitting
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      },
-    };
-    
-    return config;
-  },
+  // Turbopack configuration
+  turbopack: {},
 };
 
 export default nextConfig;

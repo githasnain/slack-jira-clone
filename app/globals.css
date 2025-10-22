@@ -1,8 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
   --primary-pink: #FF3F7F;
   --primary-purple: #8C00FF;
   --slack-600: #FF3F7F;
@@ -12,6 +14,14 @@
   --slack-300: #FFB3C9;
   --slack-200: #FFD6E5;
   --slack-100: #FFF0F5;
+  --purple-600: #7C3AED;
+  --purple-700: #6D28D9;
+  --purple-500: #8C00FF;
+  --purple-400: #A855F7;
+  --purple-300: #C084FC;
+  --purple-200: #D8B4FE;
+  --purple-100: #E9D5FF;
+  --purple-50: #F3E8FF;
 }
 
 .dark {
@@ -26,19 +36,21 @@
   --slack-300: #FFB3C9;
   --slack-200: #FFD6E5;
   --slack-100: #FFF0F5;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --purple-600: #7C3AED;
+  --purple-700: #6D28D9;
+  --purple-500: #8C00FF;
+  --purple-400: #A855F7;
+  --purple-300: #C084FC;
+  --purple-200: #D8B4FE;
+  --purple-100: #E9D5FF;
+  --purple-50: #F3E8FF;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Inter', system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom scrollbar */
@@ -57,6 +69,10 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-purple);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
 }
 
 /* Status colors for tickets */
@@ -91,4 +107,50 @@ body {
 
 .priority-urgent {
   @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateY(-10px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Gradient backgrounds */
+.gradient-pink-purple {
+  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--primary-purple) 100%);
+}
+
+.gradient-purple-pink {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-pink) 100%);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

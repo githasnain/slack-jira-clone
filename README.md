@@ -1,257 +1,276 @@
-# 🚀 Slack + Jira Clone
+# Slack-Jira Clone
 
-A modern collaborative workspace platform that combines Slack's messaging capabilities with Jira's project management features. Built with Next.js 15, TypeScript, and Tailwind CSS.
+A modern, full-featured project management and team collaboration platform built with Next.js, featuring authentication, ticketing, messaging, and analytics.
 
-## ✨ Features
+## 🚀 Features
 
-### 🎫 **Ticket Management System**
-- **Create, Read, Update, Delete** tickets with full CRUD operations
-- **Real-time status updates** with visual feedback
-- **Priority levels**: Low, Medium, High, Urgent
-- **Status tracking**: To Do, In Progress, Review, Done
-- **User permissions**: Only ticket creators can edit/delete their tickets
-- **Persistent storage** using localStorage
-- **Visual indicators** for recently updated tickets
+### ✅ Core Functionalities
+- **Authentication System**: Sign up, login, and password reset with OTP verification
+- **Admin Panel**: Create channels, projects, and manage teams
+- **Project Structure**: Frontend, Backend, and Design teams for each project
+- **Ticket System**: Create, update, and track tasks with real-time status updates
+- **Messaging System**: Team collaboration through channels with reactions
+- **Analytics Dashboard**: Project metrics, progress tracking, and team performance
 
-### 💬 **Messaging System**
-- Real-time messaging interface
-- User authentication and session management
-- Message history and persistence
+### 🎨 Design & UX
+- **Color Scheme**: Primary pink (#FF3F7F) and purple (#8C00FF)
+- **Light/Dark Mode**: Fully responsive theme switching
+- **Responsive Design**: Optimized for desktop, tablet, and mobile
+- **Modern UI**: Clean, intuitive interface with smooth animations
 
-### 📊 **Project Management**
-- Kanban-style project boards
-- Team collaboration features
-- Task assignment and tracking
-
-### 🎨 **Modern UI/UX**
-- **Responsive design** for all screen sizes
-- **Dark/Light theme** support
-- **Clean, elegant interface** with Tailwind CSS
-- **Smooth animations** and transitions
-- **Accessible components** with proper ARIA labels
+### 🔧 Technical Features
+- **Next.js 15**: Latest Next.js with App Router
+- **NextAuth**: Secure authentication with credentials provider
+- **Prisma**: Type-safe database ORM with PostgreSQL
+- **Tailwind CSS**: Utility-first styling with custom color palette
+- **TypeScript**: Full type safety throughout the application
+- **Real-time Updates**: Dynamic status changes and live messaging
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
 - **Authentication**: NextAuth.js
 - **Database**: PostgreSQL with Prisma ORM
-- **UI Components**: Radix UI + Custom Components
-- **Icons**: Lucide React
-- **State Management**: React Hooks + Context
+- **Deployment**: Docker-ready with docker-compose
 
-## 🚀 Quick Start
+## 📦 Installation
 
 ### Prerequisites
 - Node.js 18+ 
 - PostgreSQL database
-- npm or yarn package manager
+- npm or yarn
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd slack-jira-clone
-```
+### Setup Steps
 
-### 2. Install Dependencies
-```bash
-npm install
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd slack-jira-clone
+   ```
 
-### 3. Environment Setup
-```bash
-# Copy environment template
-cp env.example .env.local
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Edit .env.local with your database credentials
-DATABASE_URL="postgresql://username:password@localhost:5432/slack_jira_clone"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
-```
+3. **Environment Setup**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Update `.env.local` with your configuration:
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/slack_jira_clone"
+   NEXTAUTH_SECRET="your-secret-key"
+   NEXTAUTH_URL="http://localhost:3000"
+   ```
 
-### 4. Database Setup
-```bash
-# Generate Prisma client
-npx prisma generate
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npm run db:generate
+   
+   # Run database migrations
+   npm run db:push
+   
+   # Seed the database with sample data
+   npm run db:seed
+   ```
 
-# Run database migrations
-npx prisma db push
-```
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
 
-### 5. Start Development Server
-```bash
-npm run dev
-```
+6. **Access the Application**
+   - Open [http://localhost:3000](http://localhost:3000)
+   - Use the seeded credentials to login
 
-Visit [http://localhost:3000](http://localhost:3000) to see the application.
+## 🔑 Default Credentials
 
-## 📁 Project Structure
+After running the seed script, you can use these credentials:
+
+### Admin Account
+- **Email**: admin@workspace.com
+- **Password**: admin123
+- **Access**: Full admin panel, user management, project creation
+
+### Regular User Accounts
+- **Email**: user1@workspace.com (password: user123)
+- **Email**: user2@workspace.com (password: user123)
+- **Email**: user3@workspace.com (password: user123)
+- **Email**: user4@workspace.com (password: user123)
+- **Email**: user5@workspace.com (password: user123)
+- **Access**: Dashboard, tickets, messaging, analytics
+
+## 🏗️ Project Structure
 
 ```
 slack-jira-clone/
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── api/               # API routes
-│   │   ├── auth/              # Authentication pages
-│   │   └── globals.css        # Global styles
-│   ├── components/            # React components
-│   │   ├── auth/             # Authentication components
-│   │   ├── features/         # Feature-specific components
-│   │   │   ├── messaging/    # Messaging components
-│   │   │   ├── projects/     # Project management
-│   │   │   ├── teams/        # Team management
-│   │   │   └── tickets/      # Ticket system
-│   │   ├── layout/           # Layout components
-│   │   ├── providers/        # Context providers
-│   │   ├── theme/            # Theme components
-│   │   └── ui/               # Reusable UI components
-│   ├── lib/                  # Utility functions
-│   │   ├── auth.ts          # NextAuth configuration
-│   │   ├── data-persistence.ts # Ticket persistence
-│   │   ├── prisma.ts        # Database client
-│   │   └── utils.ts         # Helper functions
-│   └── middleware.ts        # Next.js middleware
-├── prisma/                   # Database schema and migrations
-├── public/                   # Static assets
-├── docs/                     # Documentation
-└── scripts/                  # Setup and utility scripts
+├── app/                    # Next.js App Router
+│   ├── admin/             # Admin panel pages
+│   ├── api/               # API routes
+│   ├── dashboard/         # User dashboard
+│   ├── login/             # Authentication pages
+│   ├── signup/
+│   ├── forgot-password/
+│   ├── tickets/           # Task management
+│   ├── messages/          # Messaging system
+│   └── analytics/         # Analytics dashboard
+├── components/            # Reusable React components
+├── lib/                   # Utility libraries
+├── prisma/               # Database schema and migrations
+├── types/                # TypeScript type definitions
+└── public/               # Static assets
 ```
 
-## 🎫 Ticket System Usage
+## 🎯 Key Features Walkthrough
 
-### Creating Tickets
-1. Click the **"Create Ticket"** button (available in header or empty state)
-2. Fill in the ticket details:
-   - **Title** (required)
-   - **Description** (optional)
-   - **Priority** (Low, Medium, High, Urgent)
-   - **Assignee** (optional)
-   - **Due Date** (optional)
-3. Click **"Create Ticket"** to save
+### 1. Authentication System
+- **Sign Up**: Create new accounts with email verification
+- **Login**: Secure authentication with role-based access
+- **Password Reset**: OTP-based password recovery via email
+- **Session Management**: Persistent sessions with NextAuth
 
-### Managing Tickets
-- **View**: Click the eye icon to view ticket details
-- **Edit**: Click the edit icon (only for tickets you created)
-- **Delete**: Click the trash icon (only for tickets you created)
-- **Status Update**: Use the dropdown to change status (only for tickets you created)
+### 2. Admin Panel
+- **User Management**: View, edit, and manage user accounts
+- **Project Creation**: Create projects with automatic team setup
+- **Channel Management**: Create public/private channels
+- **System Logs**: Monitor system activity and user actions
 
-### Visual Indicators
-- **Purple border**: Tickets you created
-- **Pink highlight**: Recently updated tickets (visible to all users)
-- **"Updated" badge**: Shows on recently modified tickets
+### 3. Project Structure
+- **Automatic Teams**: Each project gets Frontend, Backend, and Design teams
+- **Team Members**: Assign users to specific teams
+- **Project Roles**: Owner, Admin, Member, and Viewer roles
+- **Progress Tracking**: Visual progress indicators and completion rates
 
-## 🔧 Development
+### 4. Ticket System
+- **Task Creation**: Create tasks with priority, assignee, and due dates
+- **Status Updates**: Real-time status changes (To Do → In Progress → Review → Done)
+- **Filtering**: Filter by project, team, status, and priority
+- **Team Visibility**: Users can only see tasks assigned to them or their teams
 
-### Available Scripts
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run test         # Run tests
-npm run type-check   # TypeScript type checking
-```
+### 5. Messaging System
+- **Channel-based**: Organized communication through channels
+- **Real-time**: Live messaging with instant updates
+- **Reactions**: Emoji reactions on messages
+- **Mobile-friendly**: Responsive design for all devices
 
-### Database Operations
-```bash
-npx prisma studio           # Open database GUI
-npx prisma db push         # Push schema changes
-npx prisma generate        # Generate Prisma client
-npx prisma db seed         # Seed database
-```
-
-### Code Quality
-- **ESLint** for code linting
-- **TypeScript** for type safety
-- **Prettier** for code formatting
-- **Jest** for testing
-
-## 🎨 Customization
-
-### Colors and Theming
-The application uses a custom color palette defined in `tailwind.config.js`:
-- **Primary Purple**: `#8C00FF`
-- **Primary Pink**: `#FF90BB`
-- **Primary Dark**: `#1A1A1A`
-
-### Component Styling
-- All components use Tailwind CSS classes
-- Custom components in `src/components/ui/`
-- Theme provider supports dark/light mode
+### 6. Analytics Dashboard
+- **Project Metrics**: Task completion rates and progress tracking
+- **Team Performance**: Individual team statistics and workload
+- **Recent Activity**: Timeline of recent actions and updates
+- **Visual Charts**: Status and priority distribution charts
 
 ## 🚀 Deployment
 
-### Production Build
-```bash
-npm run build
-npm run start
-```
-
 ### Docker Deployment
 ```bash
-# Build Docker image
-docker build -t slack-jira-clone .
-
-# Run with Docker Compose
+# Build and run with Docker Compose
 docker-compose up -d
+
+# Or build manually
+docker build -t slack-jira-clone .
+docker run -p 3000:3000 slack-jira-clone
 ```
 
-### Environment Variables
-Ensure these are set in production:
-- `DATABASE_URL`: PostgreSQL connection string
-- `NEXTAUTH_URL`: Your domain URL
-- `NEXTAUTH_SECRET`: Random secret key
+### Production Environment Variables
+```env
+DATABASE_URL="your-production-database-url"
+NEXTAUTH_SECRET="your-production-secret"
+NEXTAUTH_URL="https://your-domain.com"
+```
 
-## 🐛 Troubleshooting
+## 🔧 Development Commands
 
-### Common Issues
+```bash
+# Development
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
 
-1. **Database Connection Issues**
-   - Verify PostgreSQL is running
-   - Check `DATABASE_URL` in `.env.local`
-   - Run `npx prisma db push` to sync schema
+# Database
+npm run db:generate  # Generate Prisma client
+npm run db:push      # Push schema changes
+npm run db:seed      # Seed database
+npm run db:studio    # Open Prisma Studio
 
-2. **Authentication Issues**
-   - Ensure `NEXTAUTH_SECRET` is set
-   - Check `NEXTAUTH_URL` matches your domain
+# Code Quality
+npm run lint         # Run ESLint
+npm run lint:fix     # Fix ESLint issues
+```
 
-3. **Build Issues**
-   - Clear `.next` folder: `rm -rf .next`
-   - Reinstall dependencies: `rm -rf node_modules && npm install`
+## 🎨 Customization
 
-### Performance Optimization
-- **Lazy loading** for heavy components
-- **Image optimization** with Next.js Image component
-- **Bundle splitting** for optimal loading
-- **Critical CSS** inlining for faster initial render
+### Color Scheme
+The app uses a custom color palette defined in `tailwind.config.js`:
+- Primary Pink: #FF3F7F
+- Primary Purple: #8C00FF
+- Status colors for different task states
+- Priority colors for task priorities
 
-## 📚 Documentation
+### Theme Customization
+- Light/Dark mode toggle
+- CSS custom properties for easy color changes
+- Responsive design breakpoints
+- Custom animations and transitions
 
-- [API Documentation](docs/API.md)
-- [Development Guide](docs/DEVELOPMENT.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Color System](docs/COLORS.md)
+## 📱 Mobile Responsiveness
+
+- **Mobile-first design**: Optimized for mobile devices
+- **Responsive grids**: Adaptive layouts for all screen sizes
+- **Touch-friendly**: Large touch targets and intuitive gestures
+- **Sidebar navigation**: Collapsible sidebar for mobile
+- **Modal dialogs**: Mobile-optimized forms and dialogs
+
+## 🔒 Security Features
+
+- **Password Hashing**: bcrypt for secure password storage
+- **Session Management**: Secure JWT-based sessions
+- **Role-based Access**: Admin and user role separation
+- **Input Validation**: Server-side validation for all inputs
+- **SQL Injection Protection**: Prisma ORM prevents SQL injection
+- **XSS Protection**: React's built-in XSS protection
+
+## 🚀 Performance Optimizations
+
+- **Next.js Optimizations**: Built-in performance features
+- **Image Optimization**: Next.js Image component
+- **Code Splitting**: Automatic code splitting
+- **Caching**: Efficient caching strategies
+- **Database Indexing**: Optimized database queries
+- **Lazy Loading**: Components loaded on demand
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🆘 Support
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation in the `docs/` folder
-- Review the troubleshooting section above
+If you encounter any issues or have questions:
+
+1. Check the [Issues](https://github.com/your-repo/issues) page
+2. Create a new issue with detailed information
+3. Include steps to reproduce the problem
+4. Provide your environment details
+
+## 🎉 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Database powered by [Prisma](https://prisma.io/)
+- Authentication by [NextAuth.js](https://next-auth.js.org/)
+- Icons by [Heroicons](https://heroicons.com/)
 
 ---
 
-**Built with ❤️ using Next.js, TypeScript, and Tailwind CSS**
+**Happy coding! 🚀**

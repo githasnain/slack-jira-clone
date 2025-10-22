@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -117,14 +118,31 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Test credentials:
-            </p>
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-              <p>Admin: admin@workspace.com / admin123</p>
-              <p>User: user1@workspace.com / user123</p>
-              <p>User: user2@workspace.com / user123</p>
+          <div className="text-center space-y-4">
+            <div>
+              <Link href="/forgot-password" className="text-sm text-slack-600 hover:text-slack-500 dark:text-slack-400 dark:hover:text-slack-300">
+                Forgot your password?
+              </Link>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{' '}
+                <Link href="/signup" className="font-medium text-slack-600 hover:text-slack-500 dark:text-slack-400 dark:hover:text-slack-300">
+                  Sign up
+                </Link>
+              </p>
+            </div>
+
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Test credentials:
+              </p>
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+                <p>Admin: admin@workspace.com / admin123</p>
+                <p>User: user1@workspace.com / user123</p>
+                <p>User: user2@workspace.com / user123</p>
+              </div>
             </div>
           </div>
         </form>

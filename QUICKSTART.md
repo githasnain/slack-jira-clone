@@ -1,143 +1,103 @@
-# ⚡ Quick Start Guide
+# Quick Start Guide
 
-Get the Slack + Jira Clone running in 5 minutes!
+## 🚀 Get Started in 5 Minutes
 
-## 🚀 One-Command Setup
+### 1. Prerequisites
+- Node.js 18+ installed
+- PostgreSQL database running
+- Git installed
 
+### 2. Clone & Install
 ```bash
-# Clone and setup everything
-git clone <repository-url> && cd slack-jira-clone && npm run setup
-```
-
-## 📋 Manual Setup (5 minutes)
-
-### 1. Install Dependencies
-```bash
+git clone <your-repo-url>
+cd slack-jira-clone
 npm install
 ```
 
-### 2. Environment Setup
+### 3. Environment Setup
 ```bash
-# Copy environment file
 cp env.example .env.local
-
-# Edit .env.local with your database credentials
-# DATABASE_URL="postgresql://postgres:1122@localhost:5432/slack_jira_clone"
-# NEXTAUTH_URL="http://localhost:3000"
-# NEXTAUTH_SECRET="your-secret-key-here"
 ```
 
-### 3. Database Setup
+Edit `.env.local`:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/slack_jira_clone"
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### 4. Database Setup
 ```bash
-# Generate Prisma client
 npm run db:generate
-
-# Push database schema
 npm run db:push
+npm run db:seed
 ```
 
-### 4. Start Development Server
+### 5. Start Development
 ```bash
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) 🎉
+### 6. Login & Explore
+- Open [http://localhost:3000](http://localhost:3000)
+- Login as admin: `admin@workspace.com` / `admin123`
+- Or as user: `user1@workspace.com` / `user123`
 
-## 🎫 Test the Ticket System
+## 🎯 What You Can Do
 
-1. **Create a ticket**: Click "Create Ticket" button
-2. **Edit a ticket**: Click the edit icon (pencil)
-3. **Change status**: Use the dropdown to update status
-4. **View details**: Click the eye icon to see full details
+### As Admin:
+- ✅ Create projects and channels
+- ✅ Manage users and teams
+- ✅ View system logs
+- ✅ Access all features
 
-## 🔧 Available Commands
+### As User:
+- ✅ View assigned tasks
+- ✅ Update task status
+- ✅ Send messages in channels
+- ✅ View analytics dashboard
 
-```bash
-# Development
-npm run dev              # Start development server
-npm run build           # Build for production
-npm run start           # Start production server
+## 🔧 Troubleshooting
 
-# Code Quality
-npm run lint            # Run ESLint
-npm run lint:fix        # Fix linting issues
-npm run type-check      # TypeScript type checking
-
-# Testing
-npm run test            # Run tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report
-
-# Database
-npm run db:generate     # Generate Prisma client
-npm run db:push         # Push schema changes
-npm run db:seed         # Seed database
-npm run db:studio       # Open Prisma Studio
-
-# Utilities
-npm run setup           # Complete setup
-npm run clean           # Clean build files
-npm run fresh-install   # Clean install
-```
-
-## 🎨 Features to Try
-
-### Ticket Management
-- ✅ Create tickets with title, description, priority
-- ✅ Assign tickets to team members
-- ✅ Set due dates and project associations
-- ✅ Update ticket status (To Do → In Progress → Review → Done)
-- ✅ Visual indicators for recently updated tickets
-- ✅ User permissions (only creators can edit/delete)
-
-### Visual Design
-- ✅ Responsive design (mobile, tablet, desktop)
-- ✅ Dark/Light theme toggle
-- ✅ Smooth animations and transitions
-- ✅ Clean, modern interface
-
-### Data Persistence
-- ✅ All tickets saved to localStorage
-- ✅ Persists across browser refreshes
-- ✅ No server required for ticket management
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Database Connection Error**
+### Database Connection Issues
 ```bash
 # Check if PostgreSQL is running
-# Update DATABASE_URL in .env.local
-npm run db:push
+pg_isready
+
+# Reset database
+npm run db:push --force-reset
+npm run db:seed
 ```
 
-**Build Errors**
+### Port Already in Use
 ```bash
-# Clear cache and rebuild
-npm run clean
-npm install
-npm run build
+# Kill process on port 3000
+npx kill-port 3000
+npm run dev
 ```
 
-**Authentication Issues**
-```bash
-# Check NEXTAUTH_SECRET in .env.local
-# Clear browser localStorage
-```
+### Environment Variables
+Make sure all required variables are set in `.env.local`:
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
 
-## 📚 Next Steps
+## 📱 Mobile Testing
+- Open Chrome DevTools
+- Toggle device toolbar
+- Test responsive design
+- Check mobile navigation
 
-- Read the [Full Documentation](README.md)
-- Check [Development Guide](docs/DEVELOPMENT.md)
-- Learn about [Deployment](docs/DEPLOYMENT.md)
+## 🎨 Customization
+- Edit colors in `tailwind.config.js`
+- Modify theme in `app/globals.css`
+- Update branding in `components/MainLayout.tsx`
 
-## 🆘 Need Help?
+## 🚀 Next Steps
+1. Create your first project
+2. Add team members
+3. Create tasks and assign them
+4. Start messaging in channels
+5. Monitor progress in analytics
 
-- Check the [troubleshooting section](#-troubleshooting)
-- Review the [documentation](docs/)
-- Create an issue in the repository
-
----
-
-**Happy coding! 🚀**
+Happy coding! 🎉
