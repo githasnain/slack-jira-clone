@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import MainLayout from '../../../components/MainLayout';
 
 interface SystemLog {
   id: string;
@@ -47,70 +48,63 @@ export default function AdminSystemLogsPage() {
   }, [session, status, router]);
 
   const loadLogs = async () => {
-    // Mock data for now - in a real app, this would fetch from API
-    const mockLogs: SystemLog[] = [
-      {
-        id: '1',
-        action: 'LOGIN_SUCCESS',
-        details: 'User admin@workspace.com logged in successfully',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        createdAt: new Date().toISOString(),
-        user: {
-          name: 'Admin User',
-          email: 'admin@workspace.com'
-        }
-      },
-      {
-        id: '2',
-        action: 'USER_CREATED',
-        details: 'New user user5@workspace.com created during system initialization',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        user: {
-          name: 'Admin User',
-          email: 'admin@workspace.com'
-        }
-      },
-      {
-        id: '3',
-        action: 'PROJECT_CREATED',
-        details: 'Web Application project created',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        user: {
-          name: 'Admin User',
-          email: 'admin@workspace.com'
-        }
-      },
-      {
-        id: '4',
-        action: 'CHANNEL_CREATED',
-        details: 'General channel created',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        createdAt: new Date(Date.now() - 10800000).toISOString(),
-        user: {
-          name: 'Admin User',
-          email: 'admin@workspace.com'
-        }
-      },
-      {
-        id: '5',
-        action: 'TICKET_CREATED',
-        details: 'Authentication ticket created',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        createdAt: new Date(Date.now() - 14400000).toISOString(),
-        user: {
-          name: 'Admin User',
-          email: 'admin@workspace.com'
-        }
+    try {
+      const response = await fetch('/api/admin/system-logs');
+      if (response.ok) {
+        const data = await response.json();
+        setLogs(data);
+      } else {
+        console.error('Failed to load system logs');
+        setLogs([]);
       }
-    ];
-    setLogs(mockLogs);
+    } catch (error) {
+      console.error('Error loading system logs:', error);
+      setLogs([]);
+    }
+  };
+
+  const exportLogs = async (format: 'csv' | 'json') => {
+    try {
+      const response = await fetch(`/api/admin/system-logs/export?format=${format}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `system-logs-${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Failed to export logs');
+      }
+    } catch (error) {
+      console.error('Error exporting logs:', error);
+      alert('Error exporting logs');
+    }
+  };
+
+  const clearLogs = async () => {
+    if (!confirm('Are you sure you want to clear all system logs? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/system-logs', {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        setLogs([]);
+        alert('All system logs have been cleared');
+      } else {
+        alert('Failed to clear logs');
+      }
+    } catch (error) {
+      console.error('Error clearing logs:', error);
+      alert('Error clearing logs');
+    }
   };
 
   const getActionColor = (action: string) => {
@@ -139,7 +133,7 @@ export default function AdminSystemLogsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-900">
+    <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -152,10 +146,22 @@ export default function AdminSystemLogsPage() {
               </p>
             </div>
             <div className="flex space-x-3">
-              <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Export Logs
+              <button 
+                onClick={() => exportLogs('csv')}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Export CSV
               </button>
-              <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <button 
+                onClick={() => exportLogs('json')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Export JSON
+              </button>
+              <button 
+                onClick={clearLogs}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
                 Clear Logs
               </button>
             </div>
@@ -293,6 +299,6 @@ export default function AdminSystemLogsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

@@ -80,10 +80,63 @@ export default function AnalyticsPage() {
       const response = await fetch(`/api/analytics?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setAnalyticsData(data);
+        // Validate and sanitize the data
+        const sanitizedData = {
+          overview: data.overview || {
+            totalTasks: 0,
+            completedTasks: 0,
+            inProgressTasks: 0,
+            todoTasks: 0,
+            reviewTasks: 0,
+            completionRate: 0,
+            avgCompletionTime: 0
+          },
+          tasksByPriority: Array.isArray(data.tasksByPriority) ? data.tasksByPriority : [],
+          tasksByStatus: Array.isArray(data.tasksByStatus) ? data.tasksByStatus : [],
+          tasksByTeam: Array.isArray(data.tasksByTeam) ? data.tasksByTeam : [],
+          recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity : [],
+          projectStats: Array.isArray(data.projectStats) ? data.projectStats : []
+        };
+        setAnalyticsData(sanitizedData);
+      } else {
+        console.error('Failed to load analytics:', response.status, response.statusText);
+        // Set empty data structure on failure
+        setAnalyticsData({
+          overview: {
+            totalTasks: 0,
+            completedTasks: 0,
+            inProgressTasks: 0,
+            todoTasks: 0,
+            reviewTasks: 0,
+            completionRate: 0,
+            avgCompletionTime: 0
+          },
+          tasksByPriority: [],
+          tasksByStatus: [],
+          tasksByTeam: [],
+          recentActivity: [],
+          projectStats: []
+        });
       }
     } catch (error) {
       console.error('Error loading analytics:', error);
+      // Set empty data structure on error
+      setAnalyticsData({
+        overview: {
+          totalTasks: 0,
+          completedTasks: 0,
+          inProgressTasks: 0,
+          todoTasks: 0,
+          reviewTasks: 0,
+          completionRate: 0,
+          avgCompletionTime: 0
+        },
+        tasksByPriority: [],
+        tasksByStatus: [],
+        tasksByTeam: [],
+        recentActivity: [],
+        projectStats: []
+      });
     }
   };
 
@@ -231,19 +284,23 @@ export default function AnalyticsPage() {
                   Tasks by Status
                 </h3>
                 <div className="space-y-3">
-                  {analyticsData.tasksByStatus.map((item) => (
-                    <div key={item.status} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(item.status)} mr-3`}></div>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {item.status.replace('_', ' ')}
+                  {analyticsData.tasksByStatus && analyticsData.tasksByStatus.length > 0 ? (
+                    analyticsData.tasksByStatus.map((item) => (
+                      <div key={item.status || 'unknown'} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${getStatusColor(item.status || 'TODO')} mr-3`}></div>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {item.status ? item.status.replace('_', ' ') : 'Unknown'}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {item.count || 0}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No status data available</p>
+                  )}
                 </div>
               </div>
 
@@ -253,19 +310,23 @@ export default function AnalyticsPage() {
                   Tasks by Priority
                 </h3>
                 <div className="space-y-3">
-                  {analyticsData.tasksByPriority.map((item) => (
-                    <div key={item.priority} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full ${getPriorityColor(item.priority)} mr-3`}></div>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {item.priority}
+                  {analyticsData.tasksByPriority && analyticsData.tasksByPriority.length > 0 ? (
+                    analyticsData.tasksByPriority.map((item) => (
+                      <div key={item.priority || 'unknown'} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${getPriorityColor(item.priority || 'MEDIUM')} mr-3`}></div>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {item.priority || 'Unknown'}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {item.count || 0}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No priority data available</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -276,24 +337,30 @@ export default function AnalyticsPage() {
                 Tasks by Team
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {analyticsData.tasksByTeam.map((item) => (
-                  <div key={item.teamId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {item.teamName}
-                      </h4>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {item.teamType}
-                      </span>
+                {analyticsData.tasksByTeam && analyticsData.tasksByTeam.length > 0 ? (
+                  analyticsData.tasksByTeam.map((item) => (
+                    <div key={item.teamId || 'unknown'} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900 dark:text-white">
+                          {item.teamName || 'Unknown Team'}
+                        </h4>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {item.teamType || 'Unknown'}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                        {item.count || 0}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        tasks assigned
+                      </div>
                     </div>
-                    <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {item.count}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      tasks assigned
-                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400">No team data available</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -327,38 +394,46 @@ export default function AnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-dark-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {analyticsData.projectStats.map((project) => (
-                      <tr key={project.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                          {project.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {project.totalTasks}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {project.completedTasks}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
-                              <div 
-                                className="bg-green-500 h-2 rounded-full"
-                                style={{ width: `${project.completionRate}%` }}
-                              ></div>
+                    {analyticsData.projectStats && analyticsData.projectStats.length > 0 ? (
+                      analyticsData.projectStats.map((project) => (
+                        <tr key={project.id || 'unknown'}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            {project.name || 'Unknown Project'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {project.totalTasks || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {project.completedTasks || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                                <div 
+                                  className="bg-green-500 h-2 rounded-full"
+                                  style={{ width: `${Math.min(project.completionRate || 0, 100)}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {project.completionRate || 0}%
+                              </span>
                             </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {project.completionRate}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {project.members}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {project.teams}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {project.members || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {project.teams || 0}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                          No project data available
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -370,40 +445,48 @@ export default function AnalyticsPage() {
                 Recent Activity
               </h3>
               <div className="space-y-4">
-                {analyticsData.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {activity.title}
-                        </span>
-                        {' '}in{' '}
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {activity.project.name}
-                        </span>
-                        {' '}assigned to{' '}
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {activity.assignee?.name || 'Unassigned'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(activity.createdAt).toLocaleString()}
-                      </p>
+                {analyticsData.recentActivity && analyticsData.recentActivity.length > 0 ? (
+                  analyticsData.recentActivity.map((activity, index) => (
+                    <div key={activity.id || index} className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {activity.title || 'Untitled Task'}
+                          </span>
+                          {activity.project && activity.project.name && (
+                            <>
+                              {' '}in{' '}
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {activity.project.name}
+                              </span>
+                            </>
+                          )}
+                          {' '}assigned to{' '}
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {activity.assignee?.name || 'Unassigned'}
+                          </span>
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'Unknown date'}
+                        </p>
+                      </div>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        activity.status === 'DONE' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : activity.status === 'IN_PROGRESS'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          : activity.status === 'IN_REVIEW'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                      }`}>
+                        {activity.status ? activity.status.replace('_', ' ') : 'Unknown'}
+                      </span>
                     </div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      activity.status === 'DONE' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : activity.status === 'IN_PROGRESS'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                        : activity.status === 'REVIEW'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                    }`}>
-                      {activity.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">No recent activity</p>
+                )}
               </div>
             </div>
           </>

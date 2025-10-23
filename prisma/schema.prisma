@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,15 +13,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -38,43 +34,40 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  status        UserStatus @default(OFFLINE)
-  role          UserRole   @default(MEMBER)
-  bio           String?
-  lastActive    DateTime  @default(now())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  // Password reset fields
-  resetPasswordToken   String?
-  resetPasswordExpires DateTime?
-  otpCode             String?
-  otpExpires          DateTime?
-  
-  // Admin fields
-  isActive      Boolean   @default(true)
-  lastLoginAt   DateTime?
-  loginAttempts Int      @default(0)
-  lockedUntil   DateTime?
-
-  accounts Account[]
-  sessions Session[]
-  messages Message[]
-  reactions MessageReaction[]
-  tasks    Task[]
-  projects ProjectMember[]
-  channels ChannelMember[]
-  teams    TeamMember[]
-  sentDirectMessages DirectMessage[] @relation("SentMessages")
-  receivedDirectMessages DirectMessage[] @relation("ReceivedMessages")
-  systemLogs SystemLog[] @relation("UserSystemLogs")
-  adminActions AdminAction[] @relation("AdminActions")
+  id                     String            @id @default(cuid())
+  name                   String?
+  email                  String            @unique
+  password               String?
+  emailVerified          DateTime?
+  image                  String?
+  status                 UserStatus        @default(OFFLINE)
+  role                   UserRole          @default(MEMBER)
+  bio                    String?
+  lastActive             DateTime          @default(now())
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  resetPasswordToken     String?
+  resetPasswordExpires   DateTime?
+  otpCode                String?
+  otpExpires             DateTime?
+  isActive               Boolean           @default(true)
+  lastLoginAt            DateTime?
+  loginAttempts          Int               @default(0)
+  lockedUntil            DateTime?
+  accounts               Account[]
+  adminActions           AdminAction[]     @relation("AdminActions")
+  channels               ChannelMember[]
+  receivedDirectMessages DirectMessage[]   @relation("ReceivedMessages")
+  sentDirectMessages     DirectMessage[]   @relation("SentMessages")
+  messages               Message[]
+  reactions              MessageReaction[]
+  projects               ProjectMember[]
+  sessions               Session[]
+  systemLogs             SystemLog[]       @relation("UserSystemLogs")
+  tasks                  Task[]
+  teams                  TeamMember[]
+  documentRequests       DocumentRequest[] @relation("DocumentRequestCreator")
+  documentUploads        DocumentUpload[]  @relation("DocumentUploader")
 }
 
 model VerificationToken {
@@ -86,115 +79,107 @@ model VerificationToken {
 }
 
 model Workspace {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  slug        String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  channels Channel[]
-  projects Project[]
+  slug        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  channels    Channel[]
+  projects    Project[]
 }
 
 model Channel {
-  id          String      @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
   description String?
-  type        ChannelType @default(PUBLIC)
+  type        ChannelType     @default(PUBLIC)
   workspaceId String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  messages  Message[]
-  members   ChannelMember[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     ChannelMember[]
+  messages    Message[]
 }
 
 model ChannelMember {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   channelId String
   userId    String
   role      ChannelRole @default(MEMBER)
-  joinedAt  DateTime @default(now())
-
-  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime    @default(now())
+  channel   Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([channelId, userId])
 }
 
 model Message {
-  id        String      @id @default(cuid())
-  content   String
-  type      MessageType @default(TEXT)
-  channelId String?
-  userId    String
-  parentId  String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-
-  channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent  Message? @relation("MessageReplies", fields: [parentId], references: [id])
-  replies Message[] @relation("MessageReplies")
-  reactions MessageReaction[]
+  id          String              @id @default(cuid())
+  content     String
+  type        MessageType         @default(TEXT)
+  channelId   String?
+  userId      String
+  parentId    String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  channel     Channel?            @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  parent      Message?            @relation("MessageReplies", fields: [parentId], references: [id])
+  replies     Message[]           @relation("MessageReplies")
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   attachments MessageAttachment[]
+  reactions   MessageReaction[]
 }
 
 model MessageReaction {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   messageId String
   userId    String
   emoji     String
   createdAt DateTime @default(now())
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
 }
 
 model MessageAttachment {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   messageId String
   filename  String
   url       String
   size      Int
   type      String
   createdAt DateTime @default(now())
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
 }
 
 model DirectMessage {
-  id        String   @id @default(cuid())
-  content   String
-  type      MessageType @default(TEXT)
-  senderId  String
+  id         String      @id @default(cuid())
+  content    String
+  type       MessageType @default(TEXT)
+  senderId   String
   receiverId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  receiver   User        @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User        @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 }
 
 model Project {
-  id          String        @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
   description String?
-  status      ProjectStatus @default(ACTIVE)
-  progress    Int           @default(0)
+  status      ProjectStatus   @default(ACTIVE)
+  progress    Int             @default(0)
   dueDate     DateTime?
   workspaceId String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members   ProjectMember[]
-  teams     Team[]
-  tasks     Task[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     ProjectMember[]
+  tasks       Task[]
+  teams       Team[]
 }
 
 model ProjectMember {
@@ -203,36 +188,33 @@ model ProjectMember {
   userId    String
   role      ProjectRole @default(MEMBER)
   joinedAt  DateTime    @default(now())
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
 }
 
 model Team {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
   description String?
-  type        TeamType @default(FRONTEND)
+  type        TeamType     @default(FRONTEND)
   projectId   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks   Task[]
-  members TeamMember[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tasks       Task[]
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  teamId    String
-  userId    String
-  role      TeamRole @default(MEMBER)
-  joinedAt  DateTime @default(now())
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
 }
@@ -244,19 +226,49 @@ model Task {
   status      TaskStatus @default(TODO)
   priority    Priority   @default(MEDIUM)
   assigneeId  String?
-  projectId   String
+  projectId   String?
   teamId      String?
+  assignBy    String?
+  assignTo    String?
   dueDate     DateTime?
   tags        String[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-
-  assignee User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
-  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  team     Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  assignee    User?      @relation(fields: [assigneeId], references: [id])
+  project     Project?   @relation(fields: [projectId], references: [id])
+  team        Team?      @relation(fields: [teamId], references: [id])
 }
 
-// Enums
+model SystemLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User?    @relation("UserSystemLogs", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AdminAction {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String?
+  targetId   String?
+  details    String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  admin      User     @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([createdAt])
+}
+
 enum UserStatus {
   ONLINE
   AWAY
@@ -303,7 +315,7 @@ enum ProjectRole {
 enum TaskStatus {
   TODO
   IN_PROGRESS
-  REVIEW
+  IN_REVIEW
   DONE
 }
 
@@ -325,35 +337,37 @@ enum TeamRole {
   MEMBER
 }
 
-// System Logs and Admin Actions
-model SystemLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  action    String
-  details   String?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  user User? @relation("UserSystemLogs", fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([createdAt])
+model DocumentRequest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  dueDate     DateTime?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  creator     User           @relation("DocumentRequestCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  uploads     DocumentUpload[]
+  
+  @@map("document_requests")
 }
 
-model AdminAction {
-  id          String   @id @default(cuid())
-  adminId     String
-  action      String
-  targetType  String?  // USER, PROJECT, TASK, etc.
-  targetId    String?
-  details     String?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  admin User @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
-
-  @@index([adminId])
-  @@index([createdAt])
+model DocumentUpload {
+  id               String   @id @default(cuid())
+  fileName         String
+  originalName     String
+  fileSize         Int
+  mimeType         String
+  filePath         String
+  uploadedBy       String
+  documentRequestId String
+  createdAt        DateTime @default(now())
+  
+  // Relations
+  uploader         User           @relation("DocumentUploader", fields: [uploadedBy], references: [id], onDelete: Cascade)
+  documentRequest  DocumentRequest @relation(fields: [documentRequestId], references: [id], onDelete: Cascade)
+  
+  @@map("document_uploads")
 }

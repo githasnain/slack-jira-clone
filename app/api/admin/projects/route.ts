@@ -1,71 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const projects = await prisma.project.findMany({
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              }
-            }
-          }
-        },
-        teams: {
-          include: {
-            members: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                  }
-                }
-              }
-            }
-          }
-        },
-        tasks: true,
-        _count: {
-          select: {
-            tasks: true,
-            members: true,
-            teams: true,
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    return NextResponse.json(projects);
-
-  } catch (error) {
-    console.error('Get projects error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,8 +9,8 @@ export async function POST(request: NextRequest) {
     
     if (!session || session.user?.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Admin access required' },
+        { status: 403 }
       );
     }
 

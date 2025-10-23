@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import MainLayout from '../../../components/MainLayout';
 
 interface Project {
   id: string;
@@ -138,7 +139,7 @@ export default function AdminProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-900">
+    <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -414,6 +415,6 @@ export default function AdminProjectsPage() {
           </div>
         )}
       </div>
-    </div>
+    </MainLayout>
   );
 }

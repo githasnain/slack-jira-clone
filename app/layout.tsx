@@ -10,8 +10,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Slack-Jira Clone",
-  description: "Modern project management and team collaboration platform",
+  title: "VertexAi Tec - Project Management",
+  description: "Modern project management and team collaboration platform by VertexAi Tec",
+  icons: {
+    icon: '/vertexai-favicon.ico',
+  },
 };
 
 export default function RootLayout({

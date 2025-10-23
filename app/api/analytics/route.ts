@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       
       // Review tasks
       prisma.task.count({ 
-        where: { ...where, status: 'REVIEW' } 
+        where: { ...where, status: 'IN_REVIEW' } 
       }),
       
       // Tasks by priority
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
     const avgCompletionTime = 3.2; // days
 
     // Get team names for tasks by team
-    const teamIds = tasksByTeam.map(t => t.teamId).filter(Boolean);
+    const teamIds = tasksByTeam.map(t => t.teamId).filter((id): id is string => Boolean(id));
     const teams = await prisma.team.findMany({
       where: {
         id: { in: teamIds }

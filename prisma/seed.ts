@@ -9,10 +9,10 @@ async function main() {
   // Create admin user
   const adminPassword = await bcrypt.hash('admin123', 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@workspace.com' },
+    where: { email: 'admin@vertexai.com' },
     update: {},
     create: {
-      email: 'admin@workspace.com',
+      email: 'admin@vertexai.com',
       name: 'Admin User',
       password: adminPassword,
       role: 'ADMIN',
@@ -46,9 +46,11 @@ async function main() {
 
   console.log('✅ Regular users created:', users.length);
 
-  // Create workspace
-  const workspace = await prisma.workspace.create({
-    data: {
+  // Create or get workspace
+  const workspace = await prisma.workspace.upsert({
+    where: { slug: 'main-workspace' },
+    update: {},
+    create: {
       name: 'Main Workspace',
       description: 'Primary workspace for the team',
       slug: 'main-workspace',
@@ -60,10 +62,8 @@ async function main() {
   // Create projects
   const projects = [];
   const projectData = [
-    { name: 'Web Application', description: 'Main web application development', status: 'ACTIVE' },
-    { name: 'Mobile App', description: 'Mobile application for iOS and Android', status: 'ON_HOLD' },
-    { name: 'API Development', description: 'Backend API and microservices', status: 'ACTIVE' },
-    { name: 'Data Analytics', description: 'Business intelligence and analytics platform', status: 'ON_HOLD' },
+    { name: 'Cup Streaming', description: 'Live streaming platform for gaming and entertainment', status: 'ACTIVE' },
+    { name: 'Tiptok', description: 'Social media platform with short-form video content', status: 'ACTIVE' },
   ];
 
   for (const projectInfo of projectData) {
@@ -104,6 +104,60 @@ async function main() {
   }
 
   console.log('✅ Project members created');
+
+  // Create teams for each project
+  const teams = [];
+  const teamData = [
+    { name: 'Designing', type: 'DESIGN', projectId: projects[0].id },
+    { name: 'Frontend', type: 'FRONTEND', projectId: projects[0].id },
+    { name: 'Backend', type: 'BACKEND', projectId: projects[0].id },
+    { name: 'Designing', type: 'DESIGN', projectId: projects[1].id },
+    { name: 'Frontend', type: 'FRONTEND', projectId: projects[1].id },
+    { name: 'Backend', type: 'BACKEND', projectId: projects[1].id },
+  ];
+
+  for (const teamInfo of teamData) {
+    const team = await prisma.team.create({
+      data: {
+        name: teamInfo.name,
+        description: `${teamInfo.name} team for ${teamInfo.type.toLowerCase()} development`,
+        type: teamInfo.type as any,
+        projectId: teamInfo.projectId,
+      },
+    });
+    teams.push(team);
+  }
+
+  console.log('✅ Teams created:', teams.length);
+
+  // Create team members
+  for (const team of teams) {
+    // Add admin to all teams
+    await prisma.teamMember.create({
+      data: {
+        teamId: team.id,
+        userId: admin.id,
+        role: 'LEAD',
+      },
+    });
+
+    // Add users to teams based on project
+    const projectIndex = projects.findIndex(p => p.id === team.projectId);
+    const startUserIndex = projectIndex * 2; // Different users for each project
+    
+    for (let i = 0; i < 2; i++) {
+      const userIndex = (startUserIndex + i) % users.length;
+      await prisma.teamMember.create({
+        data: {
+          teamId: team.id,
+          userId: users[userIndex].id,
+          role: 'MEMBER',
+        },
+      });
+    }
+  }
+
+  console.log('✅ Team members created');
 
   // Create channels
   const channels = [];
@@ -157,52 +211,60 @@ async function main() {
   // Create sample tickets
   const tickets = [];
   const ticketData = [
+    // Cup Streaming project tickets
     {
-      title: 'Implement user authentication',
-      description: 'Add login and registration functionality with role-based access control',
+      title: 'Design streaming interface',
+      description: 'Create user interface for live streaming functionality',
       priority: 'HIGH',
       status: 'IN_PROGRESS',
       projectId: projects[0].id,
+      teamId: teams[0].id, // Designing team
       assigneeId: users[0].id,
     },
     {
-      title: 'Design landing page',
-      description: 'Create modern, responsive landing page design',
-      priority: 'MEDIUM',
+      title: 'Implement video player',
+      description: 'Build responsive video player component',
+      priority: 'HIGH',
       status: 'TODO',
       projectId: projects[0].id,
+      teamId: teams[1].id, // Frontend team
       assigneeId: users[1].id,
     },
     {
-      title: 'Setup CI/CD pipeline',
-      description: 'Configure automated testing and deployment pipeline',
-      priority: 'HIGH',
+      title: 'Setup streaming server',
+      description: 'Configure RTMP server for live streaming',
+      priority: 'URGENT',
       status: 'TODO',
-      projectId: projects[2].id,
+      projectId: projects[0].id,
+      teamId: teams[2].id, // Backend team
       assigneeId: users[2].id,
     },
+    // Tiptok project tickets
     {
-      title: 'Mobile app wireframes',
-      description: 'Create initial wireframes for mobile application',
-      priority: 'MEDIUM',
+      title: 'Design video feed UI',
+      description: 'Create TikTok-style video feed interface',
+      priority: 'HIGH',
       status: 'IN_PROGRESS',
       projectId: projects[1].id,
+      teamId: teams[3].id, // Designing team
       assigneeId: users[3].id,
     },
     {
-      title: 'Database optimization',
-      description: 'Optimize database queries and add proper indexing',
-      priority: 'LOW',
-      status: 'DONE',
-      projectId: projects[2].id,
+      title: 'Implement video upload',
+      description: 'Build video upload and processing functionality',
+      priority: 'HIGH',
+      status: 'TODO',
+      projectId: projects[1].id,
+      teamId: teams[4].id, // Frontend team
       assigneeId: users[4].id,
     },
     {
-      title: 'API documentation',
-      description: 'Create comprehensive API documentation',
+      title: 'Create recommendation engine',
+      description: 'Build AI-powered video recommendation system',
       priority: 'MEDIUM',
-      status: 'REVIEW',
-      projectId: projects[2].id,
+      status: 'IN_REVIEW',
+      projectId: projects[1].id,
+      teamId: teams[5].id, // Backend team
       assigneeId: users[0].id,
     },
   ];
@@ -215,6 +277,7 @@ async function main() {
         priority: ticketInfo.priority as any,
         status: ticketInfo.status as any,
         projectId: ticketInfo.projectId,
+        teamId: ticketInfo.teamId,
         assigneeId: ticketInfo.assigneeId,
       },
     });
@@ -320,7 +383,8 @@ async function main() {
   console.log('\n📋 Summary:');
   console.log(`- Admin user: ${admin.email} (password: admin123)`);
   console.log(`- Regular users: ${users.length} (password: user123)`);
-  console.log(`- Projects: ${projects.length}`);
+  console.log(`- Projects: ${projects.length} (Cup Streaming, Tiptok)`);
+  console.log(`- Teams: ${teams.length} (3 teams per project: Designing, Frontend, Backend)`);
   console.log(`- Channels: ${channels.length}`);
   console.log(`- Tickets: ${tickets.length}`);
   console.log(`- Messages: ${messages.length}`);

@@ -3,9 +3,22 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-console.log('🔧 Initializing NextAuth configuration...');
+console.log('🔧 Initializing NextAuth configuration...', new Date().toISOString());
 
 export const authOptions = {
+  session: {
+    strategy: 'jwt' as const,
+    maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 60 * 60, // 1 hour
+  },
+  jwt: {
+    maxAge: 24 * 60 * 60, // 24 hours
+  },
+  pages: {
+    signIn: '/login',
+    signOut: '/login',
+    error: '/login',
+  },
   providers: [
     CredentialsProvider({
       id: 'credentials',
@@ -53,137 +66,70 @@ export const authOptions = {
             return null;
           }
 
-          // Check if user is active
-          if (!user.isActive) {
-            console.log('❌ User inactive:', email);
-            return null;
-          }
-
-          // Check if account is locked
-          if (user.lockedUntil && user.lockedUntil > new Date()) {
-            console.log('❌ Account locked:', email);
-            return null;
-          }
-
           // Verify password
           if (!user.password) {
             console.log('❌ No password set for user:', email);
             return null;
           }
-
-          // Validate password format before comparison
-          if (typeof user.password !== 'string' || user.password.length !== 60 || !user.password.startsWith('$2')) {
-            console.log('❌ Invalid password format for user:', email, 'Length:', user.password?.length, 'Starts with $2:', user.password?.startsWith('$2'));
-            return null;
-          }
-
-          // Additional validation for bcrypt comparison
-          if (typeof password !== 'string' || password.length === 0) {
-            console.log('❌ Invalid password for comparison:', typeof password, 'Length:', password?.length);
-            return null;
-          }
-
-          // Ensure both values are strings and not empty
-          const cleanPassword = String(password).trim();
-          const cleanHash = String(user.password).trim();
           
-          if (cleanPassword.length === 0 || cleanHash.length === 0) {
-            console.log('❌ Empty password or hash after cleaning');
+          const isValidPassword = await bcrypt.compare(password, user.password);
+          if (!isValidPassword) {
+            console.log('❌ Invalid password for user:', email);
             return null;
           }
 
-          let isPasswordValid = false;
-          try {
-            // Ensure both parameters are strings for bcrypt comparison
-            const passwordStr = String(cleanPassword);
-            const hashStr = String(cleanHash);
-            
-            // Additional validation for bcrypt format
-            if (!hashStr.startsWith('$2')) {
-              console.log('❌ Invalid bcrypt hash format');
-              return null;
-            }
-            
-            isPasswordValid = await bcrypt.compare(passwordStr, hashStr);
-          } catch (bcryptError) {
-            console.log('❌ Bcrypt comparison error:', bcryptError instanceof Error ? bcryptError.message : String(bcryptError));
-            console.log('Password type:', typeof cleanPassword, 'Length:', cleanPassword?.length);
-            console.log('Hash type:', typeof cleanHash, 'Length:', cleanHash?.length);
-            console.log('Password preview:', cleanPassword.substring(0, 10) + '...');
-            console.log('Hash preview:', cleanHash.substring(0, 10) + '...');
-            console.log('Hash starts with $2:', cleanHash.startsWith('$2'));
-            return null;
-          }
-
-          if (!isPasswordValid) {
-            // Increment login attempts
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                loginAttempts: user.loginAttempts + 1,
-                lockedUntil: user.loginAttempts >= 4 ? new Date(Date.now() + 15 * 60 * 1000) : null // Lock for 15 minutes after 5 attempts
-              }
-            });
-            return null;
-          }
-
-          // Reset login attempts on successful login
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              loginAttempts: 0,
-              lockedUntil: null,
-              lastLoginAt: new Date()
-            }
-          });
-
-          // Log successful login
-          await prisma.systemLog.create({
-            data: {
-              userId: user.id,
-              action: 'LOGIN_SUCCESS',
-              details: `User ${user.email} logged in successfully`
-            }
-          });
+          console.log('✅ User authenticated successfully:', { id: user.id, email: user.email, role: user.role });
 
           return {
             id: user.id,
             email: user.email,
-            name: user.name || '',
+            name: user.name || user.email,
             role: user.role,
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('❌ Authentication error:', error);
           return null;
         }
       }
     })
   ],
-  session: {
-    strategy: 'jwt' as const,
-  },
   callbacks: {
     async jwt({ token, user }: any) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }: any) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
+      try {
+        if (token) {
+          session.user.id = token.id as string;
+          session.user.role = token.role as string;
+          session.user.email = token.email as string;
+        }
+        return session;
+      } catch (error) {
+        console.error('Session callback error:', error);
+        return null;
+      }
+    }
+  },
+  events: {
+    async signOut({ token }: any) {
+      console.log('🔓 User signed out:', token?.email);
+    },
+    async session({ session }: any) {
+      // Check if session is expired
+      if (session?.expires && new Date(session.expires) < new Date()) {
+        console.log('⏰ Session expired');
+        return null;
       }
       return session;
     }
-  },
-  pages: {
-    signIn: '/login',
-  },
-  secret: process.env.NEXTAUTH_SECRET,
+  }
 };
 
 const handler = NextAuth(authOptions);
-
-export default handler;
+export { handler as GET, handler as POST };

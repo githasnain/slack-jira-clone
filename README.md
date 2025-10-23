@@ -1,47 +1,111 @@
-# Slack-Jira Clone
+# VertexAi Tec - Project Management System
 
-A modern, full-featured project management and team collaboration platform built with Next.js, featuring authentication, ticketing, messaging, and analytics.
+A comprehensive project management platform built with Next.js 16, featuring role-based access control, team collaboration, and ticket management.
 
 ## 🚀 Features
 
-### ✅ Core Functionalities
-- **Authentication System**: Sign up, login, and password reset with OTP verification
-- **Admin Panel**: Create channels, projects, and manage teams
-- **Project Structure**: Frontend, Backend, and Design teams for each project
-- **Ticket System**: Create, update, and track tasks with real-time status updates
-- **Messaging System**: Team collaboration through channels with reactions
-- **Analytics Dashboard**: Project metrics, progress tracking, and team performance
+- **Role-Based Access Control (RBAC)**: Admin and User roles with different permissions
+- **Project Management**: Create and manage multiple projects (Cup Streaming, Tiptok)
+- **Team Collaboration**: Organize teams within projects (Designing, Frontend, Backend)
+- **Ticket Management**: Create, assign, and track tickets with status updates
+- **Real-time Updates**: Live data synchronization across the platform
+- **Admin Dashboard**: Comprehensive oversight and management capabilities
+- **User Management**: Admin can manage users, change passwords, and assign roles
+- **Document Requests**: Admin can create document requests for users to upload files
+- **File Upload System**: Secure file upload with validation and organized storage
+- **Performance Optimized**: Memoized components and efficient data loading
+- **Security First**: Server-side validation and audit trail
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-### 🎨 Design & UX
-- **Color Scheme**: Primary pink (#FF3F7F) and purple (#8C00FF)
-- **Light/Dark Mode**: Fully responsive theme switching
-- **Responsive Design**: Optimized for desktop, tablet, and mobile
-- **Modern UI**: Clean, intuitive interface with smooth animations
+## 🏗️ Architecture
 
-### 🔧 Technical Features
-- **Next.js 15**: Latest Next.js with App Router
-- **NextAuth**: Secure authentication with credentials provider
-- **Prisma**: Type-safe database ORM with PostgreSQL
-- **Tailwind CSS**: Utility-first styling with custom color palette
-- **TypeScript**: Full type safety throughout the application
-- **Real-time Updates**: Dynamic status changes and live messaging
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS 4
+### Technology Stack
+- **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: PostgreSQL
 - **Authentication**: NextAuth.js
-- **Database**: PostgreSQL with Prisma ORM
-- **Deployment**: Docker-ready with docker-compose
+- **Styling**: Tailwind CSS with dark mode support
 
-## 📦 Installation
+### Project Structure
+```
+├── app/                    # Next.js app directory
+│   ├── admin/              # Admin dashboard
+│   ├── api/                # API routes
+│   ├── dashboard/          # User dashboard
+│   ├── tickets/            # Ticket management
+│   └── projects/           # Project management
+├── components/             # Reusable components
+├── lib/                    # Utility functions
+├── prisma/                 # Database schema and migrations
+└── public/                 # Static assets
+```
+
+## 👥 User Roles & Permissions
+
+### 🔑 Admin Role
+**Login Credentials:**
+- **Email**: `admin@workspace.com`
+- **Password**: `admin123`
+
+**Permissions:**
+- ✅ View all projects, teams, and tickets
+- ✅ Create, edit, and delete any ticket
+- ✅ Assign tickets to any user or team
+- ✅ Manage project and team assignments
+- ✅ Access admin dashboard with full oversight
+- ✅ View audit trail of all actions
+- ✅ Monitor system-wide activity
+- ✅ Create document requests for users
+- ✅ View and download all uploaded files
+
+### 👤 User Role
+**Login Credentials:**
+- **Email**: `user1@workspace.com` to `user5@workspace.com`
+- **Password**: `user123`
+
+**Permissions:**
+- ✅ View only assigned projects and teams
+- ✅ Create tickets in accessible projects/teams
+- ✅ Edit and delete only their own tickets
+- ✅ View tickets from their projects/teams
+- ✅ Upload documents for admin requests
+- ❌ Cannot access admin dashboard
+- ❌ Cannot view other users' tickets
+- ❌ Cannot assign tickets to others
+
+## 🗄️ Database Schema
+
+### Core Models
+- **User**: Authentication and role management
+- **Project**: Project containers (Cup Streaming, Tiptok)
+- **Team**: Teams within projects (Designing, Frontend, Backend)
+- **Task**: Tickets/tasks with assignments
+- **ProjectMember**: User-project relationships
+- **TeamMember**: User-team relationships
+
+### Access Control
+```typescript
+// User can only see:
+- Their assigned projects
+- Their assigned teams
+- Tickets from their projects/teams
+- Tickets assigned to them personally
+
+// Admin can see:
+- All projects and teams
+- All tickets across all projects
+- All user assignments
+- Complete audit trail
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
 - PostgreSQL database
-- npm or yarn
+- npm or yarn package manager
 
-### Setup Steps
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -59,7 +123,7 @@ A modern, full-featured project management and team collaboration platform built
    cp env.example .env.local
    ```
    
-   Update `.env.local` with your configuration:
+   Update `.env.local` with your database URL:
    ```env
    DATABASE_URL="postgresql://username:password@localhost:5432/slack_jira_clone"
    NEXTAUTH_SECRET="your-secret-key"
@@ -68,14 +132,11 @@ A modern, full-featured project management and team collaboration platform built
 
 4. **Database Setup**
    ```bash
-   # Generate Prisma client
-   npm run db:generate
+   # Push schema to database
+   npx prisma db push
    
-   # Run database migrations
-   npm run db:push
-   
-   # Seed the database with sample data
-   npm run db:seed
+   # Seed with sample data
+   npx prisma db seed
    ```
 
 5. **Start Development Server**
@@ -85,170 +146,158 @@ A modern, full-featured project management and team collaboration platform built
 
 6. **Access the Application**
    - Open [http://localhost:3000](http://localhost:3000)
-   - Use the seeded credentials to login
+   - Login with admin or user credentials
 
-## 🔑 Default Credentials
+## 🔐 Authentication Flow
 
-After running the seed script, you can use these credentials:
+### Admin Login
+1. Navigate to `/login`
+2. Enter admin credentials:
+   - Email: `admin@workspace.com`
+   - Password: `admin123`
+3. Access admin dashboard at `/admin`
+4. Full system access and management capabilities
 
-### Admin Account
-- **Email**: admin@workspace.com
-- **Password**: admin123
-- **Access**: Full admin panel, user management, project creation
+### User Login
+1. Navigate to `/login`
+2. Enter user credentials:
+   - Email: `user1@workspace.com` (or user2-5)
+   - Password: `user123`
+3. Access user dashboard at `/dashboard`
+4. Limited access to assigned projects/teams
 
-### Regular User Accounts
-- **Email**: user1@workspace.com (password: user123)
-- **Email**: user2@workspace.com (password: user123)
-- **Email**: user3@workspace.com (password: user123)
-- **Email**: user4@workspace.com (password: user123)
-- **Email**: user5@workspace.com (password: user123)
-- **Access**: Dashboard, tickets, messaging, analytics
+### User Registration
+1. Navigate to `/signup`
+2. Fill in registration form
+3. New users are assigned `MEMBER` role by default
+4. Admin can assign users to projects/teams
 
-## 🏗️ Project Structure
+## 📊 Project Structure
 
-```
-slack-jira-clone/
-├── app/                    # Next.js App Router
-│   ├── admin/             # Admin panel pages
-│   ├── api/               # API routes
-│   ├── dashboard/         # User dashboard
-│   ├── login/             # Authentication pages
-│   ├── signup/
-│   ├── forgot-password/
-│   ├── tickets/           # Task management
-│   ├── messages/          # Messaging system
-│   └── analytics/         # Analytics dashboard
-├── components/            # Reusable React components
-├── lib/                   # Utility libraries
-├── prisma/               # Database schema and migrations
-├── types/                # TypeScript type definitions
-└── public/               # Static assets
-```
+### Cup Streaming Project
+- **Designing Team**: UI/UX design for streaming platform
+- **Frontend Team**: React/Next.js development
+- **Backend Team**: API and server development
 
-## 🎯 Key Features Walkthrough
+### Tiptok Project
+- **Designing Team**: UI/UX design for social platform
+- **Frontend Team**: React/Next.js development
+- **Backend Team**: API and server development
 
-### 1. Authentication System
-- **Sign Up**: Create new accounts with email verification
-- **Login**: Secure authentication with role-based access
-- **Password Reset**: OTP-based password recovery via email
-- **Session Management**: Persistent sessions with NextAuth
+## 🎯 Usage Guide
 
-### 2. Admin Panel
-- **User Management**: View, edit, and manage user accounts
-- **Project Creation**: Create projects with automatic team setup
-- **Channel Management**: Create public/private channels
-- **System Logs**: Monitor system activity and user actions
+### For Admins
+1. **Dashboard Access**: Navigate to `/admin` for full system overview
+2. **Project Management**: View all projects with team assignments
+3. **Ticket Assignment**: Assign tickets to specific users or teams
+4. **User Management**: Monitor user activities and assignments
+5. **Audit Trail**: Track all system changes and actions
 
-### 3. Project Structure
-- **Automatic Teams**: Each project gets Frontend, Backend, and Design teams
-- **Team Members**: Assign users to specific teams
-- **Project Roles**: Owner, Admin, Member, and Viewer roles
-- **Progress Tracking**: Visual progress indicators and completion rates
+### For Users
+1. **Dashboard**: View personal tickets and project status
+2. **Ticket Creation**: Create tickets in assigned projects/teams
+3. **Ticket Management**: Edit/delete only your own tickets
+4. **Project View**: See only your assigned projects and teams
 
-### 4. Ticket System
-- **Task Creation**: Create tasks with priority, assignee, and due dates
-- **Status Updates**: Real-time status changes (To Do → In Progress → Review → Done)
-- **Filtering**: Filter by project, team, status, and priority
-- **Team Visibility**: Users can only see tasks assigned to them or their teams
+## 🔧 API Endpoints
 
-### 5. Messaging System
-- **Channel-based**: Organized communication through channels
-- **Real-time**: Live messaging with instant updates
-- **Reactions**: Emoji reactions on messages
-- **Mobile-friendly**: Responsive design for all devices
+### Public Endpoints
+- `GET /api/auth/session` - Get current session
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/forgot-password` - Password reset
 
-### 6. Analytics Dashboard
-- **Project Metrics**: Task completion rates and progress tracking
-- **Team Performance**: Individual team statistics and workload
-- **Recent Activity**: Timeline of recent actions and updates
-- **Visual Charts**: Status and priority distribution charts
+### Protected Endpoints
+- `GET /api/tasks` - Get user's accessible tickets
+- `POST /api/tasks` - Create new ticket
+- `PUT /api/tasks/[id]` - Update ticket
+- `DELETE /api/tasks/[id]` - Delete ticket
+- `GET /api/projects` - Get user's projects
+- `GET /api/teams` - Get user's teams
 
-## 🚀 Deployment
+### Admin Endpoints
+- `GET /api/admin` - Admin dashboard data
+- `POST /api/admin` - Admin actions (assignments)
+- `GET /api/document-requests` - Get all document requests
+- `POST /api/document-requests` - Create document request
+- `PUT /api/document-requests/[id]` - Update document request
+- `DELETE /api/document-requests/[id]` - Delete document request
 
-### Docker Deployment
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
+### Document Upload Endpoints
+- `POST /api/document-uploads` - Upload document for a request
 
-# Or build manually
-docker build -t slack-jira-clone .
-docker run -p 3000:3000 slack-jira-clone
-```
+## 📄 Document Request System
 
-### Production Environment Variables
-```env
-DATABASE_URL="your-production-database-url"
-NEXTAUTH_SECRET="your-production-secret"
-NEXTAUTH_URL="https://your-domain.com"
-```
+### Admin Features
+- **Create Document Requests**: Admin can create requests for specific documents
+- **Set Due Dates**: Optional due dates for document submissions
+- **View All Uploads**: See all uploaded files organized by request and user
+- **Download Files**: Download individual files or all files from a request
+- **Manage Requests**: Edit, activate/deactivate, or delete document requests
 
-## 🔧 Development Commands
+### User Features
+- **View Active Requests**: See all active document requests
+- **Upload Documents**: Upload files for specific requests (one file per request)
+- **File Validation**: Automatic validation of file types and sizes
+- **View Upload Status**: See which requests they've completed
+- **Download Own Files**: View and download their own uploaded files
 
-```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
+### File Security
+- **File Type Validation**: Only allowed file types (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, GIF, WEBP)
+- **Size Limits**: Maximum 10MB per file
+- **Secure Storage**: Files stored in organized directory structure
+- **Access Control**: Users can only upload to active requests
 
-# Database
-npm run db:generate  # Generate Prisma client
-npm run db:push      # Push schema changes
-npm run db:seed      # Seed database
-npm run db:studio    # Open Prisma Studio
+## 🛡️ Security Features
 
-# Code Quality
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint issues
-```
+- **Server-side Validation**: All permissions checked on API level
+- **Role-based Access**: Strict separation between admin and user access
+- **Audit Logging**: All admin actions tracked and logged
+- **Session Management**: Secure authentication with NextAuth.js
+- **Data Isolation**: Users only see their assigned data
+- **File Upload Security**: Validated file types and size limits
 
-## 🎨 Customization
+## 🧪 Testing
 
-### Color Scheme
-The app uses a custom color palette defined in `tailwind.config.js`:
-- Primary Pink: #FF3F7F
-- Primary Purple: #8C00FF
-- Status colors for different task states
-- Priority colors for task priorities
+### Test Admin Access
+1. Login with admin credentials
+2. Navigate to `/admin`
+3. Verify access to all projects, teams, and tickets
+4. Test ticket assignment functionality
 
-### Theme Customization
-- Light/Dark mode toggle
-- CSS custom properties for easy color changes
-- Responsive design breakpoints
-- Custom animations and transitions
+### Test User Access
+1. Login with user credentials
+2. Navigate to `/dashboard`
+3. Verify limited access to assigned projects/teams
+4. Test ticket creation and management
 
-## 📱 Mobile Responsiveness
+### Test Access Control
+1. Try accessing admin features as regular user
+2. Verify proper error messages and redirects
+3. Test ticket permissions (edit/delete only own tickets)
 
-- **Mobile-first design**: Optimized for mobile devices
-- **Responsive grids**: Adaptive layouts for all screen sizes
-- **Touch-friendly**: Large touch targets and intuitive gestures
-- **Sidebar navigation**: Collapsible sidebar for mobile
-- **Modal dialogs**: Mobile-optimized forms and dialogs
+## 📈 Performance
 
-## 🔒 Security Features
+- **Optimized Queries**: Efficient database queries with proper indexing
+- **Caching**: Next.js built-in caching for improved performance
+- **Real-time Updates**: Live data synchronization
+- **Responsive Design**: Optimized for all device sizes
 
-- **Password Hashing**: bcrypt for secure password storage
-- **Session Management**: Secure JWT-based sessions
-- **Role-based Access**: Admin and user role separation
-- **Input Validation**: Server-side validation for all inputs
-- **SQL Injection Protection**: Prisma ORM prevents SQL injection
-- **XSS Protection**: React's built-in XSS protection
+## 🔮 Future Improvements
 
-## 🚀 Performance Optimizations
-
-- **Next.js Optimizations**: Built-in performance features
-- **Image Optimization**: Next.js Image component
-- **Code Splitting**: Automatic code splitting
-- **Caching**: Efficient caching strategies
-- **Database Indexing**: Optimized database queries
-- **Lazy Loading**: Components loaded on demand
+- **Real-time Notifications**: WebSocket integration for live updates
+- **Advanced Analytics**: Detailed project and team analytics
+- **File Attachments**: Support for ticket file attachments
+- **Mobile App**: React Native mobile application
+- **Advanced Permissions**: Granular permission system
+- **Integration APIs**: Third-party service integrations
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## 📄 License
 
@@ -256,21 +305,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🆘 Support
 
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/your-repo/issues) page
-2. Create a new issue with detailed information
-3. Include steps to reproduce the problem
-4. Provide your environment details
-
-## 🎉 Acknowledgments
-
-- Built with [Next.js](https://nextjs.org/)
-- Styled with [Tailwind CSS](https://tailwindcss.com/)
-- Database powered by [Prisma](https://prisma.io/)
-- Authentication by [NextAuth.js](https://next-auth.js.org/)
-- Icons by [Heroicons](https://heroicons.com/)
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the documentation for common issues
 
 ---
 
-**Happy coding! 🚀**
+**Built with ❤️ by VertexAi Tec**
