@@ -31,3 +31,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// DELETE method removed - use /api/projects/[id] instead

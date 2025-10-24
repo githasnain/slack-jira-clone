@@ -1,53 +1,53 @@
 #!/bin/bash
 
-# Azure Container Instance Deployment Script
-# For Slack-Jira Clone Application
+# Azure Production Deployment Script
+# Slack-Jira Clone Project Management System
 
 set -e
 
 # Configuration
 RESOURCE_GROUP="slack-jira-rg"
-CONTAINER_NAME="slack-jira-app"
-IMAGE_NAME="slack-jira-clone"
+CONTAINER_GROUP="slack-jira-app"
 LOCATION="eastus"
+IMAGE_NAME="slack-jira-clone"
 CPU_CORES="1"
 MEMORY_GB="2"
 
-echo "🚀 Starting Azure deployment for Slack-Jira Clone..."
+echo "🚀 Starting Azure Production Deployment..."
 
-# Check if Azure CLI is installed
+# Check prerequisites
 if ! command -v az &> /dev/null; then
     echo "❌ Azure CLI is not installed. Please install it first."
     exit 1
 fi
 
-# Login to Azure (if not already logged in)
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker is not installed. Please install it first."
+    exit 1
+fi
+
+# Check Azure login
 echo "🔐 Checking Azure login status..."
 if ! az account show &> /dev/null; then
     echo "Please login to Azure..."
     az login
 fi
 
-# Create resource group if it doesn't exist
+# Create resource group
 echo "📦 Creating resource group..."
 az group create \
     --name $RESOURCE_GROUP \
     --location $LOCATION \
     --output table
 
-# Build Docker image
+# Build and deploy
 echo "🐳 Building Docker image..."
 docker build -t $IMAGE_NAME .
 
-# Tag image for Azure Container Registry (optional)
-echo "🏷️ Tagging image..."
-docker tag $IMAGE_NAME $IMAGE_NAME:latest
-
-# Deploy to Azure Container Instances
 echo "🚀 Deploying to Azure Container Instances..."
 az container create \
     --resource-group $RESOURCE_GROUP \
-    --name $CONTAINER_NAME \
+    --name $CONTAINER_GROUP \
     --image $IMAGE_NAME \
     --cpu $CPU_CORES \
     --memory $MEMORY_GB \
@@ -56,17 +56,22 @@ az container create \
         NODE_ENV=production \
         PORT=3000 \
         HOSTNAME=0.0.0.0 \
+        DATABASE_URL="$DATABASE_URL" \
+        NEXTAUTH_URL="$NEXTAUTH_URL" \
+        NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+        REDIS_URL="$REDIS_URL" \
+        NEXT_PUBLIC_APP_URL="$NEXT_PUBLIC_APP_URL" \
     --restart-policy Always \
     --output table
 
-# Get the public IP
-echo "🌐 Getting public IP address..."
+# Get deployment info
+echo "🌐 Getting deployment information..."
 PUBLIC_IP=$(az container show \
     --resource-group $RESOURCE_GROUP \
-    --name $CONTAINER_NAME \
+    --name $CONTAINER_GROUP \
     --query "ipAddress.ip" \
     --output tsv)
 
-echo "✅ Deployment completed!"
-echo "🌐 Your application is available at: http://$PUBLIC_IP:3000"
-echo "📊 Monitor your container: az container logs --resource-group $RESOURCE_GROUP --name $CONTAINER_NAME --follow"
+echo "✅ Deployment completed successfully!"
+echo "🌐 Application URL: http://$PUBLIC_IP:3000"
+echo "📊 Monitor logs: az container logs --resource-group $RESOURCE_GROUP --name $CONTAINER_GROUP --follow"

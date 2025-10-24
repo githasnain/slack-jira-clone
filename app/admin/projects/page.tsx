@@ -58,6 +58,9 @@ export default function AdminProjectsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeTab, setActiveTab] = useState<'projects' | 'channels'>('projects');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -127,6 +130,109 @@ export default function AdminProjectsPage() {
       }
     } catch (error) {
       console.error('Error creating:', error);
+    }
+  };
+
+  const handleEditProject = (project: Project) => {
+    console.log('🔍 Edit button clicked for project:', project.name);
+    setEditingProject(project);
+    setFormData({
+      name: project.name,
+      description: project.description || '',
+      type: 'PUBLIC',
+      dueDate: project.dueDate ? new Date(project.dueDate).toISOString().split('T')[0] : ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingProject) return;
+
+    console.log('🔍 Updating project:', editingProject.id);
+    
+    try {
+      const response = await fetch(`/api/projects/${editingProject.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          dueDate: formData.dueDate
+        }),
+      });
+
+      console.log('🔍 Update response status:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Update successful:', result);
+        alert('Project updated successfully!');
+        setShowEditModal(false);
+        setEditingProject(null);
+        setFormData({ name: '', description: '', type: 'PUBLIC', dueDate: '' });
+        await loadData();
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Update failed:', errorData);
+        alert(`Error: ${errorData.error || 'Failed to update project'}`);
+      }
+    } catch (error) {
+      console.error('❌ Network error updating project:', error);
+      alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string, projectName: string) => {
+    console.log('🔍 Delete button clicked for project:', projectId, projectName);
+    
+    // Validate inputs
+    if (!projectId || !projectName) {
+      console.error('❌ Invalid project data:', { projectId, projectName });
+      alert('Error: Invalid project data');
+      return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete the project "${projectName}"? This action cannot be undone.`)) {
+      console.log('🔍 User cancelled deletion');
+      return;
+    }
+
+    console.log('🔍 Proceeding with deletion...');
+    setDeletingProjectId(projectId);
+    
+    try {
+      console.log('🔍 Sending DELETE request to /api/projects/' + projectId);
+      
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('🔍 Response status:', response.status);
+      console.log('🔍 Response ok:', response.ok);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Delete successful:', result);
+        alert('Project deleted successfully!');
+        // Reload data to update the UI
+        await loadData();
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Delete failed:', errorData);
+        alert(`Error: ${errorData.error || 'Failed to delete project'}`);
+      }
+    } catch (error) {
+      console.error('❌ Network error deleting project:', error);
+      alert(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeletingProjectId(null);
     }
   };
 
@@ -257,8 +363,29 @@ export default function AdminProjectsPage() {
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Teams: {project.teams.map(team => team.name).join(', ')}
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Teams: {project.teams.map(team => team.name).join(', ')}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditProject(project)}
+                            className="px-3 py-1 text-sm font-medium rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProject(project.id, project.name)}
+                            disabled={deletingProjectId === project.id}
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                              deletingProjectId === project.id
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800'
+                            }`}
+                          >
+                            {deletingProjectId === project.id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -326,6 +453,78 @@ export default function AdminProjectsPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {showEditModal && editingProject && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-dark-800">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  Edit Project: {editingProject.name}
+                </h3>
+                
+                <form onSubmit={handleUpdateProject} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-slack-500 focus:border-slack-500 bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-slack-500 focus:border-slack-500 bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-slack-500 focus:border-slack-500 bg-white dark:bg-dark-700 text-gray-900 dark:text-white"
+                      value={formData.dueDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        setEditingProject(null);
+                        setFormData({ name: '', description: '', type: 'PUBLIC', dueDate: '' });
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-slack-600 hover:bg-slack-700 rounded-md"
+                    >
+                      Update
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         )}
 

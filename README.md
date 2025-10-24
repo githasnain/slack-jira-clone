@@ -104,11 +104,20 @@ A comprehensive project management platform built by **Hasnain Haider** with Nex
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- PostgreSQL database
-- npm or yarn package manager
+- **Node.js 18+** - [Download here](https://nodejs.org/)
+- **PostgreSQL database** - Local or cloud
+- **npm** or **yarn** package manager
 
-### Installation
+### 🚀 Super Quick Start (Automated)
+```bash
+# Clone and setup everything automatically
+git clone <repository-url>
+cd slack-jira-clone
+chmod +x quick-start.sh
+./quick-start.sh
+```
+
+### 📋 Manual Setup
 
 1. **Clone the repository**
    ```bash
@@ -123,23 +132,31 @@ A comprehensive project management platform built by **Hasnain Haider** with Nex
 
 3. **Environment Setup**
    ```bash
-   cp env.example .env.local
+   # Copy environment template
+   cp env.template .env
+   
+   # Edit with your database configuration
+   nano .env  # or use your preferred editor
    ```
    
-   Update `.env.local` with your database URL:
+   **Required Environment Variables:**
    ```env
    DATABASE_URL="postgresql://username:password@localhost:5432/slack_jira_clone"
-   NEXTAUTH_SECRET="your-secret-key"
+   NEXTAUTH_SECRET="your-super-secret-key-here"
    NEXTAUTH_URL="http://localhost:3000"
+   NEXT_PUBLIC_APP_URL="http://localhost:3000"
    ```
 
 4. **Database Setup**
    ```bash
+   # Generate Prisma client
+   npm run db:generate
+   
    # Push schema to database
-   npx prisma db push
+   npm run db:push
    
    # Seed with sample data
-   npx prisma db seed
+   npm run db:seed
    ```
 
 5. **Start Development Server**
@@ -150,6 +167,22 @@ A comprehensive project management platform built by **Hasnain Haider** with Nex
 6. **Access the Application**
    - Open [http://localhost:3000](http://localhost:3000)
    - Login with admin or user credentials
+
+### 🔐 Default Login Credentials
+
+**Admin Account:**
+- Email: `admin@example.com`
+- Password: `admin123`
+
+**User Accounts:**
+- Email: `user1@example.com` to `user5@example.com`
+- Password: `user123`
+
+### 📚 Detailed Setup Guide
+
+For comprehensive setup instructions, troubleshooting, and deployment guides, see:
+- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - Complete setup instructions
+- **[AZURE_DEPLOYMENT_GUIDE.md](./AZURE_DEPLOYMENT_GUIDE.md)** - Azure deployment guide
 
 ## 🔐 Authentication Flow
 
@@ -354,10 +387,6 @@ For detailed deployment instructions, see [PRODUCTION_DEPLOYMENT.md](./PRODUCTIO
 ✅ **Monitoring**: Complete audit trail and system logs
 ✅ **Documentation**: Comprehensive guides and API docs
 
-## 👨‍💻 Developer Credits
-
-**System Built by: Hasnain Haider**  
-*Full-Stack Developer & System Architect*
 
 ### 🏆 Development Highlights
 - **Architecture Design**: Complete system architecture and database design
@@ -372,13 +401,6 @@ For detailed deployment instructions, see [PRODUCTION_DEPLOYMENT.md](./PRODUCTIO
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the repository
-- Contact Hasnain Haider (System Developer)
-- Check the documentation for common issues
 
 ---
 
