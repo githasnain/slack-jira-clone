@@ -23,7 +23,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Get projects error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      },
       { status: 500 }
     );
   }

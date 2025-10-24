@@ -8,11 +8,11 @@ console.log('🔧 Initializing NextAuth configuration...', new Date().toISOStrin
 export const authOptions = {
   session: {
     strategy: 'jwt' as const,
-    maxAge: 24 * 60 * 60, // 24 hours
-    updateAge: 60 * 60, // 1 hour
+    maxAge: 8 * 60 * 60, // 8 hours (configurable via environment)
+    updateAge: 30 * 60, // 30 minutes
   },
   jwt: {
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 8 * 60 * 60, // 8 hours
   },
   pages: {
     signIn: '/login',

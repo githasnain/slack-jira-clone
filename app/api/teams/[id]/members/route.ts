@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logAdminAction } from '@/lib/access-control';
 
+// Get team members
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,34 +21,27 @@ export async function GET(
 
     const { id } = await params;
 
-    const documentRequest = await prisma.documentRequest.findUnique({
-      where: { id },
+    // Get team members
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: id },
       include: {
-        creator: {
-          select: { id: true, name: true, email: true }
-        },
-        uploads: {
-          include: {
-            uploader: {
-              select: { id: true, name: true, email: true }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            status: true,
+            lastActive: true,
+            isActive: true
+          }
         }
       }
     });
 
-    if (!documentRequest) {
-      return NextResponse.json(
-        { error: 'Document request not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(documentRequest);
+    return NextResponse.json(teamMembers);
 
   } catch (error) {
-    console.error('Get document request error:', error);
+    console.error('Get team members error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -55,7 +49,8 @@ export async function GET(
   }
 }
 
-export async function PUT(
+// Add member to team (Admin only)
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -70,25 +65,45 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const { title, description, dueDate, isActive } = await request.json();
+    const { userId, role = 'MEMBER' } = await request.json();
 
-    const documentRequest = await prisma.documentRequest.update({
-      where: { id },
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user is already a member
+    const existingMember = await prisma.teamMember.findUnique({
+      where: {
+        teamId_userId: {
+          teamId: id,
+          userId: userId
+        }
+      }
+    });
+
+    if (existingMember) {
+      return NextResponse.json(
+        { error: 'User is already a member of this team' },
+        { status: 400 }
+      );
+    }
+
+    // Add member to team
+    const teamMember = await prisma.teamMember.create({
       data: {
-        title,
-        description,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        isActive: isActive !== undefined ? isActive : true
+        teamId: id,
+        userId: userId,
+        role: role
       },
       include: {
-        creator: {
-          select: { id: true, name: true, email: true }
-        },
-        uploads: {
-          include: {
-            uploader: {
-              select: { id: true, name: true, email: true }
-            }
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         }
       }
@@ -97,21 +112,21 @@ export async function PUT(
     // Log admin action
     await logAdminAction(
       session.user.id,
-      'DOCUMENT_REQUEST_UPDATED',
-      'DOCUMENT_REQUEST',
-      documentRequest.id,
-      `Admin updated document request: "${title}"`,
+      'TEAM_MEMBER_ADDED',
+      'TEAM_MEMBER',
+      teamMember.id,
+      `Admin added user ${teamMember.user.name} to team`,
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'
     );
 
     return NextResponse.json({
-      message: 'Document request updated successfully',
-      documentRequest
+      message: 'Member added to team successfully',
+      teamMember
     });
 
   } catch (error) {
-    console.error('Update document request error:', error);
+    console.error('Add team member error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -119,6 +134,7 @@ export async function PUT(
   }
 }
 
+// Remove member from team (Admin only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -134,39 +150,45 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const { userId } = await request.json();
 
-    // Delete all associated uploads first
-    await prisma.documentUpload.deleteMany({
-      where: { documentRequestId: id }
-    });
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
 
-    // Delete the document request
-    await prisma.documentRequest.delete({
-      where: { id }
+    // Remove member from team
+    await prisma.teamMember.delete({
+      where: {
+        teamId_userId: {
+          teamId: id,
+          userId: userId
+        }
+      }
     });
 
     // Log admin action
     await logAdminAction(
       session.user.id,
-      'DOCUMENT_REQUEST_DELETED',
-      'DOCUMENT_REQUEST',
-      id,
-      `Admin deleted document request`,
+      'TEAM_MEMBER_REMOVED',
+      'TEAM_MEMBER',
+      userId,
+      `Admin removed user from team`,
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'
     );
 
     return NextResponse.json({
-      message: 'Document request deleted successfully'
+      message: 'Member removed from team successfully'
     });
 
   } catch (error) {
-    console.error('Delete document request error:', error);
+    console.error('Remove team member error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
-
-

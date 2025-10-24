@@ -79,13 +79,15 @@ export default function MessagesPage() {
 
   const loadChannels = async () => {
     try {
-      const response = await fetch('/api/admin/channels');
+      const response = await fetch('/api/channels');
       if (response.ok) {
         const channelsData = await response.json();
         setChannels(channelsData);
         if (channelsData.length > 0) {
           setSelectedChannel(channelsData[0]);
         }
+      } else {
+        console.error('Failed to load channels:', response.status);
       }
     } catch (error) {
       console.error('Error loading channels:', error);

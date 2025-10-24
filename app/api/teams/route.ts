@@ -29,6 +29,12 @@ export async function GET(request: NextRequest) {
                 select: { id: true, name: true, email: true }
               }
             }
+          },
+          _count: {
+            select: {
+              members: true,
+              tasks: true
+            }
           }
         }
       });
@@ -52,6 +58,12 @@ export async function GET(request: NextRequest) {
                 select: { id: true, name: true, email: true }
               }
             }
+          },
+          _count: {
+            select: {
+              members: true,
+              tasks: true
+            }
           }
         }
       });
@@ -62,7 +74,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Get teams error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      },
       { status: 500 }
     );
   }
@@ -132,7 +147,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Create team error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      },
       { status: 500 }
     );
   }

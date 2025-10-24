@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         action: 'USER_CREATED',
-        details: `User ${user.email} created account`
+        details: `User ${user.email} created account - admin needs to assign channels`
       }
     });
 

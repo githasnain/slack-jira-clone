@@ -230,6 +230,7 @@ model Task {
   teamId      String?
   assignBy    String?
   assignTo    String?
+  createdBy   String?
   dueDate     DateTime?
   tags        String[]
   createdAt   DateTime   @default(now())

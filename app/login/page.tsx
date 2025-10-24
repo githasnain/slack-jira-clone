@@ -134,16 +134,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Test credentials:
-              </p>
-              <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                <p>Admin: admin@workspace.com / admin123</p>
-                <p>User: user1@workspace.com / user123</p>
-                <p>User: user2@workspace.com / user123</p>
-              </div>
-            </div>
           </div>
         </form>
       </div>

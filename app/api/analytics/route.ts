@@ -19,8 +19,17 @@ export async function GET(request: NextRequest) {
     const teamId = searchParams.get('teamId');
     const period = searchParams.get('period') || '30'; // days
 
+    // Validate period parameter
+    const periodDays = parseInt(period);
+    if (isNaN(periodDays) || periodDays < 1 || periodDays > 365) {
+      return NextResponse.json(
+        { error: 'Invalid period parameter. Must be between 1 and 365 days.' },
+        { status: 400 }
+      );
+    }
+
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(period));
+    startDate.setDate(startDate.getDate() - periodDays);
 
     // Base where clause
     const where: any = {
@@ -175,8 +184,8 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    // Calculate completion rate
-    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+    // Calculate completion rate with proper rounding
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100 * 100) / 100 : 0;
 
     // Calculate average completion time (mock data for demo)
     const avgCompletionTime = 3.2; // days
@@ -239,8 +248,13 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Get analytics error:', error);
+    
+    // Return structured error response
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      },
       { status: 500 }
     );
   }

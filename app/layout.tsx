@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from '../components/Providers';
+import PerformanceMonitor from '../components/PerformanceMonitor';
 import { ThemeProvider } from '../components/ThemeProvider';
 
 const inter = Inter({
@@ -28,6 +29,7 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="system" storageKey="slack-jira-theme">
           <Providers>
             {children}
+            <PerformanceMonitor />
           </Providers>
         </ThemeProvider>
       </body>

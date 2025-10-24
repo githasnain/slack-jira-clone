@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logAdminAction } from '@/lib/access-control';
 
+// Get project members
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,34 +21,27 @@ export async function GET(
 
     const { id } = await params;
 
-    const documentRequest = await prisma.documentRequest.findUnique({
-      where: { id },
+    // Get project members
+    const projectMembers = await prisma.projectMember.findMany({
+      where: { projectId: id },
       include: {
-        creator: {
-          select: { id: true, name: true, email: true }
-        },
-        uploads: {
-          include: {
-            uploader: {
-              select: { id: true, name: true, email: true }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            status: true,
+            lastActive: true,
+            isActive: true
+          }
         }
       }
     });
 
-    if (!documentRequest) {
-      return NextResponse.json(
-        { error: 'Document request not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(documentRequest);
+    return NextResponse.json(projectMembers);
 
   } catch (error) {
-    console.error('Get document request error:', error);
+    console.error('Get project members error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -55,7 +49,8 @@ export async function GET(
   }
 }
 
-export async function PUT(
+// Add member to project (Admin only)
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -70,25 +65,45 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const { title, description, dueDate, isActive } = await request.json();
+    const { userId, role = 'MEMBER' } = await request.json();
 
-    const documentRequest = await prisma.documentRequest.update({
-      where: { id },
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user is already a member
+    const existingMember = await prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: id,
+          userId: userId
+        }
+      }
+    });
+
+    if (existingMember) {
+      return NextResponse.json(
+        { error: 'User is already a member of this project' },
+        { status: 400 }
+      );
+    }
+
+    // Add member to project
+    const projectMember = await prisma.projectMember.create({
       data: {
-        title,
-        description,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        isActive: isActive !== undefined ? isActive : true
+        projectId: id,
+        userId: userId,
+        role: role
       },
       include: {
-        creator: {
-          select: { id: true, name: true, email: true }
-        },
-        uploads: {
-          include: {
-            uploader: {
-              select: { id: true, name: true, email: true }
-            }
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         }
       }
@@ -97,21 +112,21 @@ export async function PUT(
     // Log admin action
     await logAdminAction(
       session.user.id,
-      'DOCUMENT_REQUEST_UPDATED',
-      'DOCUMENT_REQUEST',
-      documentRequest.id,
-      `Admin updated document request: "${title}"`,
+      'PROJECT_MEMBER_ADDED',
+      'PROJECT_MEMBER',
+      projectMember.id,
+      `Admin added user ${projectMember.user.name} to project`,
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'
     );
 
     return NextResponse.json({
-      message: 'Document request updated successfully',
-      documentRequest
+      message: 'Member added to project successfully',
+      projectMember
     });
 
   } catch (error) {
-    console.error('Update document request error:', error);
+    console.error('Add project member error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -119,6 +134,7 @@ export async function PUT(
   }
 }
 
+// Remove member from project (Admin only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -134,39 +150,45 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const { userId } = await request.json();
 
-    // Delete all associated uploads first
-    await prisma.documentUpload.deleteMany({
-      where: { documentRequestId: id }
-    });
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
 
-    // Delete the document request
-    await prisma.documentRequest.delete({
-      where: { id }
+    // Remove member from project
+    await prisma.projectMember.delete({
+      where: {
+        projectId_userId: {
+          projectId: id,
+          userId: userId
+        }
+      }
     });
 
     // Log admin action
     await logAdminAction(
       session.user.id,
-      'DOCUMENT_REQUEST_DELETED',
-      'DOCUMENT_REQUEST',
-      id,
-      `Admin deleted document request`,
+      'PROJECT_MEMBER_REMOVED',
+      'PROJECT_MEMBER',
+      userId,
+      `Admin removed user from project`,
       request.headers.get('x-forwarded-for') || 'unknown',
       request.headers.get('user-agent') || 'unknown'
     );
 
     return NextResponse.json({
-      message: 'Document request deleted successfully'
+      message: 'Member removed from project successfully'
     });
 
   } catch (error) {
-    console.error('Delete document request error:', error);
+    console.error('Remove project member error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
-
-

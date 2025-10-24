@@ -107,11 +107,11 @@ export default function TeamsPage() {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 dark:text-gray-400">Members:</span>
-                  <span className="text-gray-900 dark:text-white">{team._count.members}</span>
+                  <span className="text-gray-900 dark:text-white">{team._count?.members || team.members?.length || 0}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 dark:text-gray-400">Tasks:</span>
-                  <span className="text-gray-900 dark:text-white">{team._count.tasks}</span>
+                  <span className="text-gray-900 dark:text-white">{team._count?.tasks || 0}</span>
                 </div>
               </div>
 

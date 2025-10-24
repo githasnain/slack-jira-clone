@@ -2,9 +2,10 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import MainLayout from '../../components/MainLayout';
+import TicketCard from '../../components/TicketCard';
 
 interface Task {
   id: string;
@@ -33,8 +34,9 @@ interface Task {
     name: string;
     type: string;
   } | null;
-  assignBy?: string;
-  assignTo?: string;
+  assignBy?: string | null;
+  assignTo?: string | null;
+  createdBy?: string | null;
 }
 
 interface Project {
@@ -77,6 +79,7 @@ export default function TicketsPage() {
     assigneeId: '',
     assignBy: '',
     assignTo: '',
+    createdBy: '',
     dueDate: '',
     tags: ''
   });
@@ -101,12 +104,21 @@ export default function TicketsPage() {
     applyFilters();
   }, [tasks, filters]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [tasksRes, projectsRes, usersRes] = await Promise.all([
-        fetch('/api/tasks'),
-        fetch('/api/projects'),
-        fetch('/api/users')
+        fetch('/api/tasks', { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch('/api/projects', { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch('/api/users', { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
       ]);
 
       if (tasksRes.ok) {
@@ -141,9 +153,9 @@ export default function TicketsPage() {
     } catch (error) {
       console.error('Error loading data:', error);
     }
-  };
+  }, []);
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...tasks];
 
     if (filters.projectId) {
@@ -163,25 +175,36 @@ export default function TicketsPage() {
     }
 
     setFilteredTasks(filtered);
-  };
+  }, [tasks, filters]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔍 Starting task creation...');
+    console.log('🔍 Form data:', formData);
+    console.log('🔍 Session:', session);
+    
     try {
+      const requestBody = {
+        ...formData,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+        // Make project and team optional
+        projectId: formData.projectId || null,
+        teamId: formData.teamId || null,
+      };
+      
+      console.log('🔍 Request body:', requestBody);
+      
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
-          // Make project and team optional
-          projectId: formData.projectId || null,
-          teamId: formData.teamId || null,
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      console.log('🔍 Response status:', response.status);
+      console.log('🔍 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const result = await response.json();
@@ -197,15 +220,26 @@ export default function TicketsPage() {
           assigneeId: '',
           assignBy: '',
           assignTo: '',
+          createdBy: '',
           dueDate: '',
           tags: ''
         });
         loadData();
       } else {
+        const errorText = await response.text();
         console.error('🔍 Task creation failed:', response.status, response.statusText);
+        console.error('🔍 Error response:', errorText);
+        
+        // Try to parse as JSON for better error display
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error('🔍 Parsed error:', errorJson);
+        } catch (parseError) {
+          console.error('🔍 Could not parse error response as JSON');
+        }
       }
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('🔍 Network error creating task:', error);
     }
   };
 
@@ -495,6 +529,7 @@ export default function TicketsPage() {
                               assigneeId: task.assigneeId || '',
                               assignBy: (task as any).assignBy || '',
                               assignTo: (task as any).assignTo || '',
+                              createdBy: (task as any).createdBy || '',
                               dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
                               tags: task.tags.join(', ')
                             });
@@ -562,7 +597,7 @@ export default function TicketsPage() {
                 )}
                 {task.dueDate && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Due:</span>
+                    <span className="text-gray-500 dark:text-gray-400">Due Date:</span>
                     <span className="text-gray-900 dark:text-white">
                       {new Date(task.dueDate).toLocaleDateString()}
                     </span>
@@ -843,49 +878,66 @@ export default function TicketsPage() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedTask.project && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Project:</span>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedTask.project.name}</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Project:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {selectedTask.project?.name || 'Not assigned'}
+                    </p>
+                  </div>
                   
-                  {selectedTask.team && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Team:</span>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedTask.team.name}</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Team:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {selectedTask.team?.name || 'Not assigned'}
+                    </p>
+                  </div>
                   
-                  {selectedTask.assignee && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Created By:</span>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedTask.assignee.name}</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedTask.status)}`}>
+                        {selectedTask.status.replace('_', ' ')}
+                      </span>
+                    </p>
+                  </div>
                   
-                  {(selectedTask as any).assignBy && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned By:</span>
-                      <p className="text-sm text-gray-900 dark:text-white">{(selectedTask as any).assignBy}</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Priority:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(selectedTask.priority)}`}>
+                        {selectedTask.priority}
+                      </span>
+                    </p>
+                  </div>
                   
-                  {(selectedTask as any).assignTo && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To:</span>
-                      <p className="text-sm text-gray-900 dark:text-white">{(selectedTask as any).assignTo}</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Created By:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {selectedTask.createdBy || selectedTask.assignee?.name || 'Unknown'}
+                    </p>
+                  </div>
                   
-                  {selectedTask.dueDate && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Due Date:</span>
-                      <p className="text-sm text-gray-900 dark:text-white">
-                        {new Date(selectedTask.dueDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned By:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {selectedTask.assignBy || 'Not assigned'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {selectedTask.assignTo || 'Not assigned'}
+                    </p>
+                  </div>
+                  
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Due Date:</span>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'Not set'}
+                    </p>
+                  </div>
                   
                   <div>
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Created:</span>
